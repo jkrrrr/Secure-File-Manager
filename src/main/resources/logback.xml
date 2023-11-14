@@ -1,24 +1,15 @@
 <configuration debug="true">
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>logs/%d{yyyy-MM-dd HH.mm.ss}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%-5level %logger{36} - %msg%n</pattern>
+            <pattern>%-5level %d{HH:mm:ss.SSS} %msg \(%class.%method @ line %line\)%n</pattern>
         </encoder>
     </appender>
 
-    <logger name="org.jline" level="DEBUG"/>
-
-    <root level="INFO">
-        <appender-ref ref="STDOUT"/>
+    <root level="DEBUG">
         <appender-ref ref="FILE"/>
     </root>
 </configuration>

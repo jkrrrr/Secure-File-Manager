@@ -1,6 +1,8 @@
 package org.SFM;
 
 import org.apache.commons.vfs2.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
@@ -29,10 +31,13 @@ public class Printer {
     private FileObject[] currentDir;
     private int numOfFiles;
     private int numOfDirs;
+    private Logger logger_Printer;
 
     private final FileSystemManager fsManager = VFS.getManager();
 
     public Printer(String fileString) throws Exception {
+        this.logger_Printer = LoggerFactory.getLogger(Main.class);
+        logger_Printer.info("Printer logger instantiated");
         this.numOfFiles = 0;
         this.numOfDirs = 0;
         this.currentDirPath = fileString;
@@ -41,8 +46,10 @@ public class Printer {
     }
 
     public void printDirContent() throws FileSystemException {
+        this.logger_Printer.info("Printing content of dir " + this.currentDirPath);
         sortContentArr();
         for (FileObject child : this.currentDir){
+            this.logger_Printer.debug("   Printing " + child.getName().getBaseName());
             if (child.getType() == FileType.FOLDER)
                 println("\u25A1 " + child.getName().getBaseName());
             if (child.getType() == FileType.FILE)
@@ -51,6 +58,7 @@ public class Printer {
     }
 
     public void println(String ln){
+        this.logger_Printer.info("Printing " + ln);
         System.out.println(ln);
     }
 
@@ -65,12 +73,14 @@ public class Printer {
      * @throws FileSystemException
      */
     private void sortContentArr() throws FileSystemException {
+        this.logger_Printer.info("Sorting content object in " + this.currentDirPath);
         ArrayList<FileObject> dirs = new ArrayList<>();
         ArrayList<FileObject> files = new ArrayList<>();
         FileObject[] toReplace = new FileObject[this.currentDir.length];
 
         // Separate content into directories and files
         for (FileObject child : this.currentDir){
+            this.logger_Printer.debug("   Sorting object " + child.getName().getBaseName());
             if (child.getType() == FileType.FOLDER){
                 dirs.add(child);
             } else {
@@ -78,6 +88,7 @@ public class Printer {
             }
         }
 
+        this.logger_Printer.debug("Creating directory and file arrays");
         // Insert directories
         for (int i = 0; i < dirs.size(); i++){
             toReplace[i] = dirs.get(i);
@@ -96,6 +107,8 @@ public class Printer {
      * @throws FileSystemException
      */
     private void updateTree() throws Exception {
+        this.logger_Printer.info("Updating content in " + this.currentDirPath);
+
         FileObject currentDir = this.fsManager.resolveFile(this.currentDirPath);
         this.currentDir = currentDir.getChildren();
 
@@ -103,11 +116,13 @@ public class Printer {
         this.numOfDirs = 0;
 
         for (FileObject child : this.currentDir){
+            this.logger_Printer.debug("   Current object: " + child.getName().getBaseName());
             if (child.getType() == FileType.FILE){
                 this.numOfFiles++;
             } else if (child.getType() == FileType.FOLDER){
                 this.numOfDirs++;
             } else {
+                this.logger_Printer.error("Unable to resolve file of type " + child.getName().getBaseName());
                 throw new Exception("Unable to resolve file type of file " + child.getName().getBaseName());
             }
         }

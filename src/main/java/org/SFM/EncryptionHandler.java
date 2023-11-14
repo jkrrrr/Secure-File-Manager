@@ -1,16 +1,17 @@
 package org.SFM;
 
-import javax.crypto.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.*;
+import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 
 enum Mode{
     ENCRYPT,
@@ -19,7 +20,11 @@ enum Mode{
 
 public class EncryptionHandler {
     Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+    Logger logger_EncryptionHandler;
+
     public EncryptionHandler() throws NoSuchAlgorithmException, NoSuchPaddingException {
+        this.logger_EncryptionHandler = LoggerFactory.getLogger(Main.class);
+        logger_EncryptionHandler.info("EncryptionHandler logger instantiated");
     }
 
     /**
@@ -31,9 +36,13 @@ public class EncryptionHandler {
      * @throws Exception
      */
     public void processFile(Mode mode, String file, String keyString, String ivString) throws Exception {
+        this.logger_EncryptionHandler.info("Processing file %s (%s)".formatted(file, mode.toString()));
 
         // Create key and IV from strings
+        this.logger_EncryptionHandler.debug("   Creating key");
         SecretKey key = new SecretKeySpec(keyString.getBytes(), "AES");
+
+        this.logger_EncryptionHandler.debug("   Creating initialization vector");
         IvParameterSpec iv = new IvParameterSpec(ivString.getBytes());
 
         // Set correct cipher mode
@@ -46,13 +55,18 @@ public class EncryptionHandler {
         }
 
         // Read file
+        this.logger_EncryptionHandler.debug("   Reading file");
         byte[] inBytes = Files.readAllBytes(Path.of(file));
+
         // Process file
+        this.logger_EncryptionHandler.debug("   Processing file");
         byte[] processed = cipher.doFinal(inBytes);
 
         FileOutputStream outputStream = new FileOutputStream(file);
         outputStream.write(processed);
         outputStream.close();
+        this.logger_EncryptionHandler.debug("   Finished processing file " + file);
+
     }
 
 }
