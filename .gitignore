@@ -19,3 +19,5 @@ SMF.iml
 
 *.txt
 /logs
+
+/target
