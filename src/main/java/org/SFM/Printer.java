@@ -15,7 +15,7 @@ enum Colour{
     CYAN("\u001B[36m");
 
     private final String ANSIcode;
-    private Colour(String code){
+    Colour(String code){
         this.ANSIcode = code;
     }
 
@@ -31,7 +31,7 @@ public class Printer {
     private FileObject[] currentDir;
     private int numOfFiles;
     private int numOfDirs;
-    private Logger logger_Printer;
+    private final Logger logger_Printer;
 
     private final FileSystemManager fsManager = VFS.getManager();
 
@@ -70,7 +70,6 @@ public class Printer {
 
     /**
      * Sorts the current directory content array so that directories appear first, then files
-     * @throws FileSystemException
      */
     private void sortContentArr() throws FileSystemException {
         this.logger_Printer.info("Sorting content object in " + this.currentDirPath);
@@ -104,7 +103,6 @@ public class Printer {
 
     /**
      * Gathers the content of the directory
-     * @throws FileSystemException
      */
     private void updateTree() throws Exception {
         this.logger_Printer.info("Updating content in " + this.currentDirPath);

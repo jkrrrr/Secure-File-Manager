@@ -13,14 +13,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 
-enum Mode{
-    ENCRYPT,
-    DECRYPT
-}
-
 public class EncryptionHandler {
-    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-    Logger logger_EncryptionHandler;
+    private final Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+    private final Logger logger_EncryptionHandler;
 
     public EncryptionHandler() throws NoSuchAlgorithmException, NoSuchPaddingException {
         this.logger_EncryptionHandler = LoggerFactory.getLogger(Main.class);
@@ -33,7 +28,6 @@ public class EncryptionHandler {
      * @param file path to file
      * @param keyString 16-byte key
      * @param ivString 16-byte initialization vector
-     * @throws Exception
      */
     public void processFile(Mode mode, String file, String keyString, String ivString) throws Exception {
         this.logger_EncryptionHandler.info("Processing file %s (%s)".formatted(file, mode.toString()));
