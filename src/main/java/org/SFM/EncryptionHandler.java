@@ -17,6 +17,11 @@ public class EncryptionHandler {
     private final Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
     private final Logger logger_EncryptionHandler;
 
+    /**
+     * Responsible for encrypting objects
+     * @throws NoSuchAlgorithmException
+     * @throws NoSuchPaddingException
+     */
     public EncryptionHandler() throws NoSuchAlgorithmException, NoSuchPaddingException {
         this.logger_EncryptionHandler = LoggerFactory.getLogger(Main.class);
         logger_EncryptionHandler.info("EncryptionHandler logger instantiated");

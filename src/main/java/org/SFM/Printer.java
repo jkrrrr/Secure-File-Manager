@@ -6,26 +6,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
-enum Colour{
-    RESET("\u001B[0m"),
-    RED("\u001B[31m"),
-    GREEN("\u001B[32m"),
-    YELLOW("\u001B[33m"),
-    BLUE("\u001B[34m"),
-    CYAN("\u001B[36m");
-
-    private final String ANSIcode;
-    Colour(String code){
-        this.ANSIcode = code;
-    }
-
-    @Override
-    public String toString(){
-        return ANSIcode;
-    }
-}
-
-
 public class Printer {
     private String currentDirPath;
     private FileObject[] currentDir;
@@ -35,6 +15,11 @@ public class Printer {
 
     private final FileSystemManager fsManager = VFS.getManager();
 
+    /**
+     * Responsible for console printing and file management
+     * @param fileString
+     * @throws Exception
+     */
     public Printer(String fileString) throws Exception {
         this.logger_Printer = LoggerFactory.getLogger(Main.class);
         logger_Printer.info("Printer logger instantiated");
@@ -45,21 +30,30 @@ public class Printer {
         updateTree();
     }
 
+    /**
+     * Prints all files and directories in the currently selected directory
+     * @throws FileSystemException
+     */
     public void printDirContent() throws FileSystemException {
         this.logger_Printer.info("Printing content of dir " + this.currentDirPath);
         sortContentArr();
         for (FileObject child : this.currentDir){
             this.logger_Printer.debug("   Printing " + child.getName().getBaseName());
             if (child.getType() == FileType.FOLDER)
-                println("\u25A1 " + child.getName().getBaseName());
+                System.out.println("\u25A1 " + child.getName().getBaseName());
             if (child.getType() == FileType.FILE)
-                println("  " + child.getName().getBaseName());
+                System.out.println("  " + child.getName().getBaseName());
         }
     }
 
-    public void println(String ln){
-        this.logger_Printer.info("Printing " + ln);
-        System.out.println(ln);
+    /**
+     * Prints a string of text in a colour
+     * @param ln String to print
+     * @param colour Colour, using Colour enum
+     */
+    public void println(String ln, Colour colour){
+        this.logger_Printer.info("Printing \"%s\" in colour %s".formatted(ln, colour));
+        System.out.println(colour + ln);
     }
 
     public void enterDir(int index) throws Exception {
@@ -102,7 +96,7 @@ public class Printer {
     }
 
     /**
-     * Gathers the content of the directory
+     * Gathers directory information
      */
     private void updateTree() throws Exception {
         this.logger_Printer.info("Updating content in " + this.currentDirPath);
