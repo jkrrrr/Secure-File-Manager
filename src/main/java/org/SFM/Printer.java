@@ -18,7 +18,6 @@ public class Printer {
     /**
      * Responsible for console printing and file management
      * @param fileString
-     * @throws Exception
      */
     public Printer(String fileString) throws Exception {
         this.logger_Printer = LoggerFactory.getLogger(Main.class);
@@ -32,7 +31,6 @@ public class Printer {
 
     /**
      * Prints all files and directories in the currently selected directory
-     * @throws FileSystemException
      */
     public void printDirContent() throws FileSystemException {
         this.logger_Printer.info("Printing content of dir " + this.currentDirPath);

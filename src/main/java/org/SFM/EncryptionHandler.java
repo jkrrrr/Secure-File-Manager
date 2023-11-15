@@ -19,8 +19,6 @@ public class EncryptionHandler {
 
     /**
      * Responsible for encrypting objects
-     * @throws NoSuchAlgorithmException
-     * @throws NoSuchPaddingException
      */
     public EncryptionHandler() throws NoSuchAlgorithmException, NoSuchPaddingException {
         this.logger_EncryptionHandler = LoggerFactory.getLogger(Main.class);
