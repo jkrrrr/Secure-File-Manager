@@ -9,20 +9,23 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class EncryptionHandler {
+
+public class CryptoHandler {
     private final Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-    private final Logger logger_EncryptionHandler;
+    private final Logger logger_CryptoHandler;
 
     /**
      * Responsible for encrypting objects
      */
-    public EncryptionHandler() throws NoSuchAlgorithmException, NoSuchPaddingException {
-        this.logger_EncryptionHandler = LoggerFactory.getLogger(Main.class);
-        logger_EncryptionHandler.info("EncryptionHandler logger instantiated");
+    public CryptoHandler() throws NoSuchAlgorithmException, NoSuchPaddingException {
+        this.logger_CryptoHandler = LoggerFactory.getLogger(Main.class);
+        logger_CryptoHandler.info("EncryptionHandler logger instantiated");
     }
 
     /**
@@ -33,13 +36,13 @@ public class EncryptionHandler {
      * @param ivString 16-byte initialization vector
      */
     public void processFile(Mode mode, String file, String keyString, String ivString) throws Exception {
-        this.logger_EncryptionHandler.info("Processing file %s (%s)".formatted(file, mode.toString()));
+        this.logger_CryptoHandler.info("Processing file %s (%s)".formatted(file, mode.toString()));
 
         // Create key and IV from strings
-        this.logger_EncryptionHandler.debug("   Creating key");
+        this.logger_CryptoHandler.debug("   Creating key");
         SecretKey key = new SecretKeySpec(keyString.getBytes(), "AES");
 
-        this.logger_EncryptionHandler.debug("   Creating initialization vector");
+        this.logger_CryptoHandler.debug("   Creating initialization vector");
         IvParameterSpec iv = new IvParameterSpec(ivString.getBytes());
 
         // Set correct cipher mode
@@ -52,18 +55,33 @@ public class EncryptionHandler {
         }
 
         // Read file
-        this.logger_EncryptionHandler.debug("   Reading file");
+        this.logger_CryptoHandler.debug("   Reading file");
         byte[] inBytes = Files.readAllBytes(Path.of(file));
 
         // Process file
-        this.logger_EncryptionHandler.debug("   Processing file");
+        this.logger_CryptoHandler.debug("   Processing file");
         byte[] processed = cipher.doFinal(inBytes);
 
         FileOutputStream outputStream = new FileOutputStream(file);
         outputStream.write(processed);
         outputStream.close();
-        this.logger_EncryptionHandler.debug("   Finished processing file " + file);
+        this.logger_CryptoHandler.debug("   Finished processing file " + file);
 
     }
+
+    /**
+     * Hashes a password
+     * @param password to hash
+     * @return the resulting hash in String form
+     * @throws NoSuchAlgorithmException
+     */
+    public String processPassword(String password) throws NoSuchAlgorithmException {
+        this.logger_CryptoHandler.debug("Processing password");
+
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
+        return(hash.toString());
+    }
+
 
 }
