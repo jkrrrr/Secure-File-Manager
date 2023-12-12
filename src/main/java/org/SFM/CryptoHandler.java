@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 
 public class CryptoHandler {
@@ -80,7 +81,7 @@ public class CryptoHandler {
 
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] hash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
-        return(hash.toString());
+        return(new String(hash, StandardCharsets.UTF_8));
     }
 
 
