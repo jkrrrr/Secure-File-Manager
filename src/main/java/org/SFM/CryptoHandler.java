@@ -1,5 +1,6 @@
 package org.SFM;
 
+import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 
 
 public class CryptoHandler {
@@ -80,7 +82,7 @@ public class CryptoHandler {
 
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] hash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
-        return(new String(hash, StandardCharsets.UTF_8));
+        return Hex.encodeHexString(hash);
     }
 
 
