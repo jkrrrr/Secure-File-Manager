@@ -1,5 +1,8 @@
 package org.SFM;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.crypto.NoSuchPaddingException;
 import java.io.*;
 import java.security.NoSuchAlgorithmException;
@@ -11,6 +14,7 @@ public class PasswordHandler {
     private final String path;
     private ArrayList<String> hashes;
     private final CryptoHandler cryptoHandler;
+    private final Logger logger_PasswordHandler;
 
 
     /**
@@ -21,6 +25,9 @@ public class PasswordHandler {
      * @throws NoSuchAlgorithmException
      */
     private PasswordHandler(String path) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException {
+        this.logger_PasswordHandler = LoggerFactory.getLogger(Main.class);
+        this.logger_PasswordHandler.info("PasswordHandler logger instantiated (" + path + ")");
+
         this.path = path;
         this.hashes = new ArrayList<>();
         this.cryptoHandler = new CryptoHandler();
@@ -48,6 +55,9 @@ public class PasswordHandler {
      */
     public boolean checkPassword(String password) throws NoSuchAlgorithmException {
         String hash = this.cryptoHandler.processPassword(password);
+
+        this.logger_PasswordHandler.info("Searching for " + hash);
+
         return this.hashes.contains(hash);
     }
 
@@ -59,6 +69,8 @@ public class PasswordHandler {
      */
     public void insertPassword(String password) throws NoSuchAlgorithmException, IOException {
         String hash = this.cryptoHandler.processPassword(password);
+
+        this.logger_PasswordHandler.info("Inserting " + hash + " to passwords");
 
         FileWriter writer = new FileWriter(path, true);
 
@@ -73,6 +85,8 @@ public class PasswordHandler {
      * @throws IOException
      */
     private void updateHashes() throws IOException {
+        this.logger_PasswordHandler.info("Updating hashes");
+
         this.hashes = new ArrayList<>();
 
         // Get hashes from file
