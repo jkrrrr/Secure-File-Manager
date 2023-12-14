@@ -3,6 +3,7 @@ package org.SFM;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
@@ -20,6 +21,7 @@ import java.util.Base64;
 
 public class CryptoHandler {
     private final Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+    private final Argon2PasswordEncoder arg2;
     private final Logger logger_CryptoHandler;
 
     /**
@@ -28,6 +30,8 @@ public class CryptoHandler {
     public CryptoHandler() throws NoSuchAlgorithmException, NoSuchPaddingException {
         this.logger_CryptoHandler = LoggerFactory.getLogger(CryptoHandler.class);
         this.logger_CryptoHandler.info("EncryptionHandler logger instantiated");
+
+        this.arg2 = new Argon2PasswordEncoder(16, 32, 1, 60000, 10);
     }
 
     /**
@@ -80,9 +84,18 @@ public class CryptoHandler {
     public String processPassword(String password) throws NoSuchAlgorithmException {
         this.logger_CryptoHandler.debug("Processing password");
 
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] hash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
-        return Hex.encodeHexString(hash);
+        String hash = this.arg2.encode(password);
+        return hash;
+    }
+
+    /**
+     * Checks a plaintext password matches a hashed password
+     * @param raw plaintext password
+     * @param hashed hashed password
+     * @return true if it does, else false
+     */
+    public boolean verifyPassword(String raw, String hashed){
+        return this.arg2.matches(raw, hashed);
     }
 
 

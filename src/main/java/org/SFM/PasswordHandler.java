@@ -58,7 +58,12 @@ public class PasswordHandler {
 
         this.logger_PasswordHandler.info("Searching for " + hash);
 
-        return this.hashes.contains(hash);
+        for (String s : this.hashes){
+            if (this.cryptoHandler.verifyPassword(password, s))
+                return true;
+        }
+
+        return false;
     }
 
     /**
