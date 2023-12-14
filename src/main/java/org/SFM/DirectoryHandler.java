@@ -21,7 +21,7 @@ public class DirectoryHandler {
      * @throws Exception
      */
     public DirectoryHandler(String fileString) throws Exception {
-        this.logger_DirectoryHandler = LoggerFactory.getLogger(Main.class);
+        this.logger_DirectoryHandler = LoggerFactory.getLogger(DirectoryHandler.class);
         logger_DirectoryHandler.info("DirectoryHandler logger instantiated");
 
         this.printer = Printer.getInstance();

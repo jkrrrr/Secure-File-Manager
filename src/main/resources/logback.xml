@@ -9,7 +9,10 @@
         </encoder>
     </appender>
 
+    <logger name="org.jline.utils.Log" level="DEBUG"/>
+
     <root level="DEBUG">
         <appender-ref ref="FILE"/>
     </root>
+
 </configuration>

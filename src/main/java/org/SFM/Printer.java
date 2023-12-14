@@ -17,7 +17,7 @@ public class Printer {
      * Responsible for console printing and file management
      */
     private Printer() throws Exception {
-        this.logger_Printer = LoggerFactory.getLogger(Main.class);
+        this.logger_Printer = LoggerFactory.getLogger(Printer.class);
         logger_Printer.info("Printer logger instantiated");
     }
 

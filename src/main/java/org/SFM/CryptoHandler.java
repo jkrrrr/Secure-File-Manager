@@ -26,8 +26,8 @@ public class CryptoHandler {
      * Responsible for encrypting objects
      */
     public CryptoHandler() throws NoSuchAlgorithmException, NoSuchPaddingException {
-        this.logger_CryptoHandler = LoggerFactory.getLogger(Main.class);
-        logger_CryptoHandler.info("EncryptionHandler logger instantiated");
+        this.logger_CryptoHandler = LoggerFactory.getLogger(CryptoHandler.class);
+        this.logger_CryptoHandler.info("EncryptionHandler logger instantiated");
     }
 
     /**

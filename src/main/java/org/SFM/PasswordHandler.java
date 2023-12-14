@@ -25,7 +25,7 @@ public class PasswordHandler {
      * @throws NoSuchAlgorithmException
      */
     private PasswordHandler(String path) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException {
-        this.logger_PasswordHandler = LoggerFactory.getLogger(Main.class);
+        this.logger_PasswordHandler = LoggerFactory.getLogger(PasswordHandler.class);
         this.logger_PasswordHandler.info("PasswordHandler logger instantiated (" + path + ")");
 
         this.path = path;
