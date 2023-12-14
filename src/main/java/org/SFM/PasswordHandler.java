@@ -59,7 +59,6 @@ public class PasswordHandler {
      * @throws IOException
      */
     public void insertPassword(String password) throws NoSuchAlgorithmException, IOException {
-        System.out.println("Adding " + password);
         String hash = this.cryptoHandler.processPassword(password);
 
         FileWriter writer = new FileWriter(path, true);
