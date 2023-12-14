@@ -47,7 +47,6 @@ public class PasswordHandler {
      * @throws NoSuchAlgorithmException
      */
     public boolean checkPassword(String password) throws NoSuchAlgorithmException {
-        // Hash password, and check if it is in the list
         String hash = this.cryptoHandler.processPassword(password);
         return this.hashes.contains(hash);
     }
@@ -63,9 +62,6 @@ public class PasswordHandler {
 
         FileWriter writer = new FileWriter(path, true);
 
-        System.out.println("Writing " + hash);
-
-        // Currently not writing properly
         writer.write(hash + "\n");
         writer.close();
 
@@ -88,7 +84,6 @@ public class PasswordHandler {
             this.hashes.add(line);
         }
         reader.close();
-
     }
 
 }
