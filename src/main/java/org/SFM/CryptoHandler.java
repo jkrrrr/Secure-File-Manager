@@ -14,8 +14,7 @@ import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
 import java.util.Base64;
 
 
@@ -73,6 +72,19 @@ public class CryptoHandler {
         outputStream.close();
         this.logger_CryptoHandler.debug("   Finished processing file " + file);
 
+    }
+
+    /**
+     * Generates a public/private keypair
+     * Access using getPublic() and getPrivate()
+     * @return KeyPair
+     * @throws NoSuchAlgorithmException
+     */
+    public KeyPair generateKeypair() throws NoSuchAlgorithmException {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(2048);
+
+        return keyGen.generateKeyPair();
     }
 
     /**
