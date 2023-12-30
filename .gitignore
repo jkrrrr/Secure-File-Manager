@@ -22,3 +22,4 @@ SMF.iml
 
 /target
 dependency-reduced-pom.xml
+config.properties
