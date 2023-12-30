@@ -41,8 +41,9 @@ public class DirectoryHandler {
      * @throws Exception
      */
     public void enterDir(int index) throws Exception {
+        this.logger_DirectoryHandler.debug("Entering dir index " + index);
         // The content in a directory is stored in an array. The directory that the user enters is identified by its index in this array.
-        this.currentDirPath = this.currentDirPath + this.currentDir[index].getName();
+        this.currentDirPath = String.valueOf(this.currentDir[index].getName());
         updateTree();
     }
 

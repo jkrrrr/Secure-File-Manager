@@ -76,15 +76,12 @@ public class Main {
                 }
             });
 
-//            textGraphics.putString(5, 4, "Last Keystroke: ", SGR.BOLD);
-//            textGraphics.putString(5 + "Last Keystroke: ".length(), 4, "<Pending>");
-
             ArrayList<String> toPrint = new ArrayList<>(dh.getDirContent());
             int offset = 5;
             char pointer = '>';
             int currentHighlight = 0;
-            textGraphics.putString(5, (offset), "> " + toPrint.get(0));
-            for (int i = 1; i <= toPrint.size()-1; i++){
+            textGraphics.putString(5, (offset), pointer + " " + toPrint.get(0));
+            for (int i = 1; i <= toPrint.size() - 1; i++){
                 textGraphics.putString(5, (i+offset), "  " + toPrint.get(i));
             }
             terminal.flush();
@@ -105,6 +102,10 @@ public class Main {
                     case 'k':
                         if (currentHighlight - 1 >= 0)
                             currentHighlight--;
+                        break;
+                    case 'a':
+                        dh.enterDir(currentHighlight);
+                        toPrint = new ArrayList<>(dh.getDirContent());
                         break;
                 }
 
