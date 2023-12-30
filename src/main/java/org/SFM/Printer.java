@@ -36,15 +36,17 @@ public class Printer {
      * Prints all files and directories in the directory, given as an array of objects
      * @param dirContent Content of directory
      */
-    public void printDirContent(FileObject[] dirContent) throws FileSystemException {
+    public ArrayList<String> getDirContent(FileObject[] dirContent) throws FileSystemException {
+        ArrayList<String> toReturn = new ArrayList<>();
         this.logger_Printer.info("Printing dir content");
         for (FileObject child : dirContent){
             this.logger_Printer.debug("   Printing " + child.getName().getBaseName());
             if (child.getType() == FileType.FOLDER)
-                System.out.println("\u25A1 " + child.getName().getBaseName());
+                toReturn.add("\u25A1 " + child.getName().getBaseName());
             if (child.getType() == FileType.FILE)
-                System.out.println("  " + child.getName().getBaseName());
+                toReturn.add("  " + child.getName().getBaseName());
         }
+        return toReturn;
     }
 
     /**

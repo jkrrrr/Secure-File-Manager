@@ -4,6 +4,7 @@ import org.apache.commons.vfs2.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class DirectoryHandler {
@@ -49,8 +50,8 @@ public class DirectoryHandler {
      * Prints the content of the current directory
      * @throws FileSystemException
      */
-    public void printCurrentDir() throws FileSystemException {
-        this.printer.printDirContent(this.currentDir);
+    public ArrayList<String> getDirContent() throws FileSystemException {
+        return this.printer.getDirContent(this.currentDir);
     }
 
     /**
