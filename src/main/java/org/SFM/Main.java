@@ -104,8 +104,19 @@ public class Main {
                             currentHighlight--;
                         break;
                     case 'a':
-                        dh.enterDir(currentHighlight);
+                        if (!dh.enterDir(currentHighlight))
+                            break;
                         toPrint = new ArrayList<>(dh.getDirContent());
+                        currentHighlight = 0;
+                        terminal.clearScreen();
+                        break;
+                    case 's':
+//                        if (!dh.enterDir(-1))
+//                            break;
+                        dh.enterDir(-1);
+                        toPrint = new ArrayList<>(dh.getDirContent());
+                        currentHighlight = 0;
+                        terminal.clearScreen();
                         break;
                 }
 

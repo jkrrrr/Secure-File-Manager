@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class DirectoryHandler {
     private String currentDirPath;
@@ -40,11 +41,34 @@ public class DirectoryHandler {
      * @param index
      * @throws Exception
      */
-    public void enterDir(int index) throws Exception {
+    public boolean enterDir(int index) throws Exception {
         this.logger_DirectoryHandler.debug("Entering dir index " + index);
         // The content in a directory is stored in an array. The directory that the user enters is identified by its index in this array.
+
+        if (index == -1){
+            try{
+                this.logger_DirectoryHandler.debug("   Current path " + this.currentDirPath);
+                StringBuilder sb = new StringBuilder(this.currentDirPath);
+                int lastIndex = sb.lastIndexOf("/");
+                this.logger_DirectoryHandler.debug("   Last / index: " + lastIndex);
+                this.currentDirPath = sb.delete(lastIndex, sb.length()).toString();
+                this.logger_DirectoryHandler.debug("   Changed to path" + sb);
+                updateTree();
+                return true;
+            } catch (Exception e){
+                this.logger_DirectoryHandler.error(e.getMessage());
+                this.logger_DirectoryHandler.error(Arrays.toString(e.getStackTrace()));
+            }
+        }
+
+        if (!this.currentDir[index].isFolder())
+            return false;
+
         this.currentDirPath = String.valueOf(this.currentDir[index].getName());
+
         updateTree();
+        return true;
+
     }
 
     /**
