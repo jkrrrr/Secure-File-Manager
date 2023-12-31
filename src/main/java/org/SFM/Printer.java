@@ -5,28 +5,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class Printer {
     private static Printer instance = null;
     private final Logger logger_Printer;
 
-    private final FileSystemManager fsManager = VFS.getManager();
 
     /**
      * Responsible for console printing and file management
      */
-    private Printer() throws Exception {
+    private Printer(){
         this.logger_Printer = LoggerFactory.getLogger(Printer.class);
         logger_Printer.info("Printer logger instantiated");
     }
 
     /**
      * Singleton checking
-     * @return
-     * @throws Exception
      */
-    public static Printer getInstance() throws Exception {
+    public static Printer getInstance(){
         if (instance == null)
             instance = new Printer();
         return instance;
@@ -42,21 +38,11 @@ public class Printer {
         for (FileObject child : dirContent){
             this.logger_Printer.debug("   Printing " + child.getName().getBaseName());
             if (child.getType() == FileType.FOLDER)
-                toReturn.add("\u25A1 " + child.getName().getBaseName());
+                toReturn.add("□ " + child.getName().getBaseName());
             if (child.getType() == FileType.FILE)
                 toReturn.add("  " + child.getName().getBaseName());
         }
         return toReturn;
-    }
-
-    /**
-     * Prints a string of text in a colour
-     * @param ln String to print
-     * @param colour Colour, using Colour enum
-     */
-    public void println(String ln, Colour colour){
-        this.logger_Printer.info("Printing \"%s\" in colour %s".formatted(ln, colour));
-        System.out.println(colour + ln);
     }
 
 }

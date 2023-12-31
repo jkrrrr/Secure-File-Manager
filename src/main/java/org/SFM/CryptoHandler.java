@@ -1,6 +1,5 @@
 package org.SFM;
 
-import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
@@ -11,11 +10,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.FileOutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.*;
-import java.util.Base64;
 
 
 public class CryptoHandler {
@@ -78,7 +75,6 @@ public class CryptoHandler {
      * Generates a public/private keypair
      * Access using getPublic() and getPrivate()
      * @return KeyPair
-     * @throws NoSuchAlgorithmException
      */
     public KeyPair generateKeypair() throws NoSuchAlgorithmException {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
@@ -91,13 +87,11 @@ public class CryptoHandler {
      * Hashes a password
      * @param password to hash
      * @return the resulting hash in String form
-     * @throws NoSuchAlgorithmException
      */
-    public String processPassword(String password) throws NoSuchAlgorithmException {
+    public String processPassword(String password){
         this.logger_CryptoHandler.debug("Processing password");
 
-        String hash = this.arg2.encode(password);
-        return hash;
+        return this.arg2.encode(password);
     }
 
     /**

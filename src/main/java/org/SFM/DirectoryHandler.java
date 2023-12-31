@@ -4,23 +4,24 @@ import org.apache.commons.vfs2.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class DirectoryHandler {
+    // Path of current directory
     private String currentDirPath;
+    // Content of current directory, stored as FileObjects
     private FileObject[] currentDir;
     private int numOfFiles;
     private int numOfDirs;
+
     private final FileSystemManager fsManager = VFS.getManager();
     private final Printer printer;
     private final Logger logger_DirectoryHandler;
 
     /**
      * Handles directory navigation
-     * @param fileString
-     * @throws Exception
+     * @param fileString Path of starting directory
      */
     public DirectoryHandler(String fileString) throws Exception {
         this.logger_DirectoryHandler = LoggerFactory.getLogger(DirectoryHandler.class);
@@ -38,33 +39,40 @@ public class DirectoryHandler {
 
     /**
      * Updates the handler to the selected directory
-     * @param index
-     * @throws Exception
+     * @param index index of directory to enter into
      * @return true when successfully indexed, false otherwise
      */
-    public boolean enterDir(int index) throws Exception {
+    public boolean enterDir(int index) {
         this.logger_DirectoryHandler.debug("Entering dir index " + index);
         // The content in a directory is stored in an array. The directory that the user enters is identified by its index in this array.
 
         try{
+            // If index is -1, go upwards in the directory tree
             if (index == -1) {
                 this.logger_DirectoryHandler.debug("   Current path " + this.currentDirPath);
+
+                // Remove the last part of the path
                 StringBuilder sb = new StringBuilder(this.currentDirPath);
                 int lastIndex = sb.lastIndexOf("/");
                 this.logger_DirectoryHandler.debug("   Last / index: " + lastIndex);
                 String newPath = sb.delete(lastIndex, sb.length()).toString();
+
+                // If the new path is invalid, return false
                 if (newPath.equals("-1"))
                     return false;
-                this.currentDirPath = sb.delete(lastIndex, sb.length()).toString();
+
+                this.currentDirPath = newPath;
 
                 this.logger_DirectoryHandler.debug("   Changed to path" + sb);
                 updateTree();
                 return true;
             }
 
+            // If index is a file, return false
             if (!this.currentDir[index].isFolder())
                 return false;
 
+            // Update the path to the new subfolder
             this.currentDirPath = String.valueOf(this.currentDir[index].getName());
 
             updateTree();
@@ -80,7 +88,6 @@ public class DirectoryHandler {
 
     /**
      * Prints the content of the current directory
-     * @throws FileSystemException
      */
     public ArrayList<String> getDirContent() throws FileSystemException {
         return this.printer.getDirContent(this.currentDir);
@@ -133,6 +140,7 @@ public class DirectoryHandler {
         this.numOfFiles = 0;
         this.numOfDirs = 0;
 
+        // Count number of files and directories
         for (FileObject child : this.currentDir){
             this.logger_DirectoryHandler.debug("   Current object: " + child.getName().getBaseName());
             if (child.getType() == FileType.FILE){
@@ -144,6 +152,8 @@ public class DirectoryHandler {
                 throw new Exception("Unable to resolve file type of file " + child.getName().getBaseName());
             }
         }
+
+        this.logger_DirectoryHandler.debug(this.currentDirPath + " has " + this.numOfFiles + " files and " + this.numOfDirs + " dirs.");
 
         sortContentArr();
     }

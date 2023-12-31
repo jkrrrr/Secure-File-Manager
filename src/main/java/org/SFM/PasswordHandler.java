@@ -20,9 +20,6 @@ public class PasswordHandler {
     /**
      * Password management
      * @param path path to file containing hashed passwords
-     * @throws IOException
-     * @throws NoSuchPaddingException
-     * @throws NoSuchAlgorithmException
      */
     private PasswordHandler(String path) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException {
         this.logger_PasswordHandler = LoggerFactory.getLogger(PasswordHandler.class);
@@ -39,7 +36,6 @@ public class PasswordHandler {
      * Singleton checking
      * @param path path to file contained hashed passwords
      * @return instance of PasswordHandler
-     * @throws Exception
      */
     public static PasswordHandler getInstance(String path) throws Exception{
         if (instance == null)
@@ -51,9 +47,8 @@ public class PasswordHandler {
      * Checks to see if the given password is contained within the password file
      * @param password password to check
      * @return true if in password file, otherwise false
-     * @throws NoSuchAlgorithmException
      */
-    public boolean checkPassword(String password) throws NoSuchAlgorithmException {
+    public boolean checkPassword(String password){
         String hash = this.cryptoHandler.processPassword(password);
 
         this.logger_PasswordHandler.info("Searching for " + hash);
@@ -69,10 +64,8 @@ public class PasswordHandler {
     /**
      * Appends a password to the file, hashed
      * @param password password to hash and store
-     * @throws NoSuchAlgorithmException
-     * @throws IOException
      */
-    public void insertPassword(String password) throws NoSuchAlgorithmException, IOException {
+    public void insertPassword(String password) throws IOException {
         String hash = this.cryptoHandler.processPassword(password);
 
         this.logger_PasswordHandler.info("Inserting " + hash + " to passwords");
@@ -87,7 +80,6 @@ public class PasswordHandler {
 
     /**
      * Refreshes the class' list of passwords based on the ones in the file
-     * @throws IOException
      */
     private void updateHashes() throws IOException {
         this.logger_PasswordHandler.info("Updating hashes");

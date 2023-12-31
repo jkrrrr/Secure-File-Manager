@@ -4,33 +4,30 @@ import com.googlecode.lanterna.*;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
-import com.googlecode.lanterna.screen.Screen;
-import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
-import com.googlecode.lanterna.terminal.TerminalResizeListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
 import java.util.*;
 import java.util.logging.LogManager;
 
 public class Main {
     public static void main(String[] args) throws Exception {
 
-        try (InputStream is = Main.class.getClassLoader().getResourceAsStream("logging.properties")) {
-            LogManager.getLogManager().readConfiguration(is);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         // Create logger
         Logger logger_Main = LoggerFactory.getLogger(Main.class);
         logger_Main.info("Main logger initialized");
+
+        try (InputStream is = Main.class.getClassLoader().getResourceAsStream("logging.properties")) {
+            LogManager.getLogManager().readConfiguration(is);
+        } catch (IOException e) {
+           logger_Main.error(Arrays.toString(e.getStackTrace()));
+        }
 
         // Load properties
         Properties properties = new Properties();
@@ -58,29 +55,28 @@ public class Main {
             terminal.clearScreen();
             terminal.setCursorVisible(false);
 
-            // Background
+            // Instantiate graphics
             final TextGraphics textGraphics = terminal.newTextGraphics();
+
+            // Background
             textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
             textGraphics.setBackgroundColor(TextColor.ANSI.BLACK);
 
-            // Title
+            // Opening title
             textGraphics.putString(2, 1, "SFM - Press ESC to exit", SGR.BOLD);
 
-            // Check for window resizing
-            terminal.addResizeListener(new TerminalResizeListener() {
-                @Override
-                public void onResized(Terminal terminal, TerminalSize newSize) {
-                    // Be careful here though, this is likely running on a separate thread. Lanterna is threadsafe in
-                    // a best-effort way so while it shouldn't blow up if you call terminal methods on multiple threads,
-                    // it might have unexpected behavior if you don't do any external synchronization
-                    textGraphics.drawLine(5, 3, newSize.getColumns() - 1, 3, ' ');
-                    textGraphics.putString(5, 3, "Terminal Size: ", SGR.BOLD);
-                    textGraphics.putString(5 + "Terminal Size: ".length(), 3, newSize.toString());
-                    try {
-                        terminal.flush();
-                    } catch (IOException e) {
-                        logger_Main.error(Arrays.toString(e.getStackTrace()));
-                    }
+            // Check for window resizing - boilerplate code from lanterna docs
+            terminal.addResizeListener((terminal1, newSize) -> {
+                // Be careful here though, this is likely running on a separate thread. Lanterna is threadsafe in
+                // a best-effort way so while it shouldn't blow up if you call terminal methods on multiple threads,
+                // it might have unexpected behavior if you don't do any external synchronization
+                textGraphics.drawLine(5, 3, newSize.getColumns() - 1, 3, ' ');
+                textGraphics.putString(5, 3, "Terminal Size: ", SGR.BOLD);
+                textGraphics.putString(5 + "Terminal Size: ".length(), 3, newSize.toString());
+                try {
+                    terminal1.flush();
+                } catch (IOException e) {
+                    logger_Main.error(Arrays.toString(e.getStackTrace()));
                 }
             });
 
@@ -90,6 +86,7 @@ public class Main {
             char pointer = '>';
             int currentHighlight = 0;
             textGraphics.putString(5, (offset), pointer + " " + toPrint.get(0));
+            // Add a pointer to the currently-highlighted object
             for (int i = 1; i <= toPrint.size() - 1; i++){
                 textGraphics.putString(5, (i+offset), "  " + toPrint.get(i));
             }
