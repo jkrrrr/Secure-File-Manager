@@ -28,9 +28,11 @@ public class Main {
             e.printStackTrace();
         }
 
+        // Create logger
         Logger logger_Main = LoggerFactory.getLogger(Main.class);
         logger_Main.info("Main logger initialized");
 
+        // Load properties
         Properties properties = new Properties();
         FileInputStream input = new FileInputStream("config.properties");
         properties.load(input);
@@ -38,27 +40,33 @@ public class Main {
         String baseDir = properties.getProperty("baseDir");
         String passwordPath = properties.getProperty("passwordPath");
 
+        // Load classes
         Printer p = Printer.getInstance();
         DirectoryHandler dh = new DirectoryHandler(baseDir);
         CryptoHandler eh = new CryptoHandler();
         PasswordHandler ph = PasswordHandler.getInstance(passwordPath);
 
+        // Terminal creation
         logger_Main.info("Initializing GUI");
         DefaultTerminalFactory defaultTerminalFactory = new DefaultTerminalFactory();
         Terminal terminal = null;
 
         try {
+            // Terminal configuration
             terminal = defaultTerminalFactory.createTerminal();
             terminal.enterPrivateMode();
             terminal.clearScreen();
             terminal.setCursorVisible(false);
 
+            // Background
             final TextGraphics textGraphics = terminal.newTextGraphics();
             textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
             textGraphics.setBackgroundColor(TextColor.ANSI.BLACK);
 
+            // Title
             textGraphics.putString(2, 1, "SFM - Press ESC to exit", SGR.BOLD);
 
+            // Check for window resizing
             terminal.addResizeListener(new TerminalResizeListener() {
                 @Override
                 public void onResized(Terminal terminal, TerminalSize newSize) {
@@ -76,6 +84,7 @@ public class Main {
                 }
             });
 
+            // Get directory content to display
             ArrayList<String> toPrint = new ArrayList<>(dh.getDirContent());
             int offset = 5;
             char pointer = '>';
@@ -86,6 +95,7 @@ public class Main {
             }
             terminal.flush();
 
+            // Read key input
             KeyStroke keyStroke = terminal.readInput();
 
             while (keyStroke.getKeyType() != KeyType.Escape) {
@@ -95,14 +105,17 @@ public class Main {
                 toPrint = new ArrayList<>(dh.getDirContent());
 
                 switch(keyStroke.getCharacter()){
+                    // Index up
                     case 'j':
                         if (currentHighlight + 1 < toPrint.size())
                             currentHighlight++;
                         break;
+                    // Index down
                     case 'k':
                         if (currentHighlight - 1 >= 0)
                             currentHighlight--;
                         break;
+                    // Enter directory
                     case 'a':
                         if (!dh.enterDir(currentHighlight))
                             break;
@@ -110,9 +123,8 @@ public class Main {
                         currentHighlight = 0;
                         terminal.clearScreen();
                         break;
+                    // Exit directory
                     case 's':
-//                        if (!dh.enterDir(-1))
-//                            break;
                         dh.enterDir(-1);
                         toPrint = new ArrayList<>(dh.getDirContent());
                         currentHighlight = 0;
@@ -120,6 +132,7 @@ public class Main {
                         break;
                 }
 
+                // Display directory content
                 for (int i = 0; i <= toPrint.size()-1; i++){
                     if (i == currentHighlight){
                         textGraphics.putString(5, (i+offset), pointer + " " + toPrint.get(i));
@@ -128,8 +141,8 @@ public class Main {
                     }
                 }
 
+                // Display content
                 terminal.flush();
-
 
                 // Read key input
                 keyStroke = terminal.readInput();
