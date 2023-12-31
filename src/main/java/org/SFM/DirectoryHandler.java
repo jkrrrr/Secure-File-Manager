@@ -40,13 +40,14 @@ public class DirectoryHandler {
      * Updates the handler to the selected directory
      * @param index
      * @throws Exception
+     * @return true when successfully indexed, false otherwise
      */
     public boolean enterDir(int index) throws Exception {
         this.logger_DirectoryHandler.debug("Entering dir index " + index);
         // The content in a directory is stored in an array. The directory that the user enters is identified by its index in this array.
 
-        if (index == -1){
-            try{
+        try{
+            if (index == -1) {
                 this.logger_DirectoryHandler.debug("   Current path " + this.currentDirPath);
                 StringBuilder sb = new StringBuilder(this.currentDirPath);
                 int lastIndex = sb.lastIndexOf("/");
@@ -55,20 +56,22 @@ public class DirectoryHandler {
                 this.logger_DirectoryHandler.debug("   Changed to path" + sb);
                 updateTree();
                 return true;
-            } catch (Exception e){
-                this.logger_DirectoryHandler.error(e.getMessage());
-                this.logger_DirectoryHandler.error(Arrays.toString(e.getStackTrace()));
             }
-        }
 
-        if (!this.currentDir[index].isFolder())
+            if (!this.currentDir[index].isFolder())
+                return false;
+
+            this.currentDirPath = String.valueOf(this.currentDir[index].getName());
+
+            updateTree();
+
+            return true;
+        } catch (Exception e){
+            this.logger_DirectoryHandler.error(e.getMessage());
+            this.logger_DirectoryHandler.error(Arrays.toString(e.getStackTrace()));
+
             return false;
-
-        this.currentDirPath = String.valueOf(this.currentDir[index].getName());
-
-        updateTree();
-        return true;
-
+        }
     }
 
     /**
