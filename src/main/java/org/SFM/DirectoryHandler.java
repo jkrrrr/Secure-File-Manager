@@ -52,7 +52,11 @@ public class DirectoryHandler {
                 StringBuilder sb = new StringBuilder(this.currentDirPath);
                 int lastIndex = sb.lastIndexOf("/");
                 this.logger_DirectoryHandler.debug("   Last / index: " + lastIndex);
+                String newPath = sb.delete(lastIndex, sb.length()).toString();
+                if (newPath.equals("-1"))
+                    return false;
                 this.currentDirPath = sb.delete(lastIndex, sb.length()).toString();
+
                 this.logger_DirectoryHandler.debug("   Changed to path" + sb);
                 updateTree();
                 return true;
