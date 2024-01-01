@@ -16,7 +16,6 @@ public class DirectoryHandler {
     private int numOfDirs;
 
     private final FileSystemManager fsManager = VFS.getManager();
-    private final Printer printer;
     private final Logger logger_DirectoryHandler;
 
     /**
@@ -26,8 +25,6 @@ public class DirectoryHandler {
     public DirectoryHandler(String fileString) throws Exception {
         this.logger_DirectoryHandler = LoggerFactory.getLogger(DirectoryHandler.class);
         logger_DirectoryHandler.info("DirectoryHandler logger instantiated");
-
-        this.printer = Printer.getInstance();
 
         this.numOfFiles = 0;
         this.numOfDirs = 0;
@@ -89,8 +86,8 @@ public class DirectoryHandler {
     /**
      * Prints the content of the current directory
      */
-    public ArrayList<String> getDirContent() throws FileSystemException {
-        return this.printer.getDirContent(this.currentDir);
+    public FileObject[] getDirContent() throws FileSystemException {
+        return this.currentDir;
     }
 
     /**
