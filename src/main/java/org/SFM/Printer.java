@@ -18,13 +18,13 @@ import java.util.Arrays;
 public class Printer {
     private static Printer instance = null;
     private final Logger logger_Printer;
-    private DirectoryHandler dh;
+    private final DirectoryHandler dh;
     private Terminal terminal;
     private TextGraphics textGraphics;
     private int currentHighlight;
     private ArrayList<String> dirToPrint;
-    private int offset;
-    private char pointer;
+    private final int offset;
+    private final char pointer;
 
 
     /**
@@ -128,13 +128,13 @@ public class Printer {
                 keyStroke = this.terminal.readInput();
             }
         } catch (IOException e) {
-            logger_Printer.error(Arrays.toString(e.getStackTrace()));
+            logger_Printer.error(e.getMessage());
         } finally {
             if (this.terminal != null) {
                 try {
                     this.terminal.close();
                 } catch (IOException e) {
-                    logger_Printer.error(Arrays.toString(e.getStackTrace()));
+                    logger_Printer.error(e.getMessage());
                 }
             }
         }
@@ -152,24 +152,27 @@ public class Printer {
     /**
      * Prints all files and directories in the directory, given as an array of objects
      */
-    public ArrayList<String> getDirContent() throws FileSystemException {
+    public ArrayList<String> getDirContent(){
         ArrayList<String> toReturn = new ArrayList<>();
-        this.logger_Printer.info("Printing dir content");
-        for (FileObject child : this.dh.getDirContent()){
-            this.logger_Printer.debug("   Printing " + child.getName().getBaseName());
-            if (child.getType() == FileType.FOLDER)
-                toReturn.add("□ " + child.getName().getBaseName());
-            if (child.getType() == FileType.FILE)
-                toReturn.add("  " + child.getName().getBaseName());
+        try {
+            this.logger_Printer.info("Printing dir content");
+            for (FileObject child : this.dh.getDirContent()){
+                this.logger_Printer.debug("   Printing " + child.getName().getBaseName());
+                if (child.getType() == FileType.FOLDER)
+                    toReturn.add("□ " + child.getName().getBaseName());
+                if (child.getType() == FileType.FILE)
+                    toReturn.add("  " + child.getName().getBaseName());
+            }
+        } catch (Exception e){
+            this.logger_Printer.error(e.getMessage());
         }
         return toReturn;
     }
 
     /**
      * Displays directory content based on the DirectoryHandler
-     * @throws IOException
      */
-    private void display_directory() throws IOException {
+    private void display_directory(){
         try {
             this.logger_Printer.debug("   Retrieving content"); // Get directory content to display
             this.dirToPrint = new ArrayList<>(this.getDirContent());
@@ -184,7 +187,7 @@ public class Printer {
             }
             this.terminal.flush();
         } catch (Exception e){
-            this.logger_Printer.error("Error in displaying directory\n" + e.getMessage());
+            this.logger_Printer.error(e.getMessage());
         }
     }
 

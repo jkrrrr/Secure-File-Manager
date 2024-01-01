@@ -3,9 +3,7 @@ package org.SFM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.crypto.NoSuchPaddingException;
 import java.io.*;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -21,13 +19,18 @@ public class PasswordHandler {
      * Password management
      * @param path path to file containing hashed passwords
      */
-    private PasswordHandler(String path) throws IOException, NoSuchPaddingException, NoSuchAlgorithmException {
+    private PasswordHandler(String path) throws Exception {
         this.logger_PasswordHandler = LoggerFactory.getLogger(PasswordHandler.class);
         this.logger_PasswordHandler.info("PasswordHandler logger instantiated (" + path + ")");
 
-        this.path = path;
-        this.hashes = new ArrayList<>();
-        this.cryptoHandler = new CryptoHandler();
+        try{
+            this.path = path;
+            this.hashes = new ArrayList<>();
+            this.cryptoHandler = new CryptoHandler();
+        } catch (Exception e){
+            this.logger_PasswordHandler.error(e.getMessage());
+            throw new Exception();
+        }
 
         updateHashes();
     }
@@ -66,14 +69,18 @@ public class PasswordHandler {
      * @param password password to hash and store
      */
     public void insertPassword(String password) throws IOException {
-        String hash = this.cryptoHandler.processPassword(password);
+        try{
+            String hash = this.cryptoHandler.processPassword(password);
 
-        this.logger_PasswordHandler.info("Inserting " + hash + " to passwords");
+            this.logger_PasswordHandler.info("Inserting " + hash + " to passwords");
 
-        FileWriter writer = new FileWriter(path, true);
+            FileWriter writer = new FileWriter(path, true);
 
-        writer.write(hash + "\n");
-        writer.close();
+            writer.write(hash + "\n");
+            writer.close();
+        } catch (Exception e){
+            this.logger_PasswordHandler.error(e.getMessage());
+        }
 
         updateHashes();
     }
@@ -81,20 +88,25 @@ public class PasswordHandler {
     /**
      * Refreshes the class' list of passwords based on the ones in the file
      */
-    private void updateHashes() throws IOException {
+    private void updateHashes() {
         this.logger_PasswordHandler.info("Updating hashes");
 
-        this.hashes = new ArrayList<>();
+        try{
+            this.hashes = new ArrayList<>();
 
-        // Get hashes from file
-        File file = new File(path);
-        Scanner reader = new Scanner(file);
+            // Get hashes from file
+            File file = new File(path);
+            Scanner reader = new Scanner(file);
 
-        while(reader.hasNextLine()){
-            String line = reader.nextLine();
-            this.hashes.add(line);
+            while(reader.hasNextLine()){
+                String line = reader.nextLine();
+                this.hashes.add(line);
+            }
+            reader.close();
+        } catch (Exception e){
+            this.logger_PasswordHandler.error(e.getMessage());
         }
-        reader.close();
+
     }
 
 }

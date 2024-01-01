@@ -86,43 +86,47 @@ public class DirectoryHandler {
     /**
      * Prints the content of the current directory
      */
-    public FileObject[] getDirContent() throws FileSystemException {
+    public FileObject[] getDirContent(){
         return this.currentDir;
     }
 
     /**
      * Sorts the current directory content array so that directories appear first, then files
      */
-    private void sortContentArr() throws FileSystemException {
-        this.logger_DirectoryHandler.info("Sorting content object in " + this.currentDirPath);
-        ArrayList<FileObject> dirs = new ArrayList<>();
-        ArrayList<FileObject> files = new ArrayList<>();
-        FileObject[] toReplace = new FileObject[this.currentDir.length];
+    private void sortContentArr() {
+        try{
+            this.logger_DirectoryHandler.info("Sorting content object in " + this.currentDirPath);
+            ArrayList<FileObject> dirs = new ArrayList<>();
+            ArrayList<FileObject> files = new ArrayList<>();
+            FileObject[] toReplace = new FileObject[this.currentDir.length];
 
-        // Separate content into directories and files
-        for (FileObject child : this.currentDir){
-            this.logger_DirectoryHandler.debug("   Sorting object " + child.getName().getBaseName());
-            if (child.getType() == FileType.FOLDER){
-                this.numOfDirs++;
-                dirs.add(child);
-            } else {
-                this.numOfFiles++;
-                files.add(child);
+            // Separate content into directories and files
+            for (FileObject child : this.currentDir){
+                this.logger_DirectoryHandler.debug("   Sorting object " + child.getName().getBaseName());
+                if (child.getType() == FileType.FOLDER){
+                    this.numOfDirs++;
+                    dirs.add(child);
+                } else {
+                    this.numOfFiles++;
+                    files.add(child);
+                }
             }
-        }
 
-        this.logger_DirectoryHandler.debug("Creating directory and file arrays");
-        // Insert directories
-        for (int i = 0; i < dirs.size(); i++){
-            toReplace[i] = dirs.get(i);
-        }
+            this.logger_DirectoryHandler.debug("Creating directory and file arrays");
+            // Insert directories
+            for (int i = 0; i < dirs.size(); i++){
+                toReplace[i] = dirs.get(i);
+            }
 
-        // Insert files
-        for (int i = 0; i < files.size(); i++){
-            toReplace[i + dirs.size()] = files.get(i);
-        }
+            // Insert files
+            for (int i = 0; i < files.size(); i++){
+                toReplace[i + dirs.size()] = files.get(i);
+            }
 
-        this.currentDir = toReplace;
+            this.currentDir = toReplace;
+        } catch (Exception e){
+            this.logger_DirectoryHandler.error(e.getMessage());
+        }
     }
 
     /**
