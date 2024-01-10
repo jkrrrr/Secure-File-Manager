@@ -1,5 +1,6 @@
 package org.SFM;
 
+import org.apache.commons.vfs2.FileObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
@@ -8,10 +9,15 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.*;
+import java.util.ArrayList;
 
 
 public class CryptoHandler {
@@ -41,7 +47,6 @@ public class CryptoHandler {
      * @param keyString 16-byte key
      * @param ivString 16-byte initialization vector
      */
-    @SuppressWarnings("GrazieInspection")
     public void processFile(Mode mode, String file, String keyString, String ivString) {
         try{
             this.logger_CryptoHandler.info("Processing file %s (%s)".formatted(file, mode.toString()));
@@ -112,6 +117,67 @@ public class CryptoHandler {
     public boolean verifyPassword(String raw, String hashed){
         return this.arg2.matches(raw, hashed);
     }
+
+    /**
+     * TO ENCRYPT A FOLDER:
+     * 1. Create metadata.json
+     * 2. Go down tree, keep note of position of each file in comparison to top folder and which dir it belongs to. Repeat until bottom reached.
+     * 3. Move all files to be in top dir. Delete all empty dirs
+     * 4. Encrypt files, including metadata.json
+     *
+     * TO DECRYPT A FOLDER:
+     * 1. Decrypt files
+     * 2. Create dirs and place files back in original place
+     * 3. Delete metadata.json
+     *
+     * @param mode
+     * @param dir
+     * @param keyString
+     * @param ivString
+     */
+    public void processDirectory(Mode mode, String dir, String keyString, String ivString) throws Exception {
+        if (mode == Mode.ENCRYPT){
+            DirectoryHandler dh = new DirectoryHandler(dir);
+
+            // Create list of files
+            FileWriter metadata = new FileWriter(dir + "/metadata.txt");
+            this.logger_CryptoHandler.info("Created metadata.txt for dir " + dir);
+
+            ArrayList<Path> filePaths = dh.getDirContent(dir, "file");
+            for (Path file : filePaths){
+                metadata.write(file.toString() + "\n");
+            }
+            metadata.close();
+
+            // Create new directory
+            File newDirectory = new File(dir + "/vault");
+            if (newDirectory.exists()){
+                this.logger_CryptoHandler.warn(dir + "/vault already exists!");
+            } else {
+                try {
+                   newDirectory.mkdirs();
+                } catch (Exception e){
+                    this.logger_CryptoHandler.error(e.getMessage());
+                }
+            }
+
+            // Copy files into new directory
+            for (Path file : filePaths){
+                this.logger_CryptoHandler.debug("Copying " + file.toString() + " to " + (dir+"/vault"));
+                Files.copy(file, (Paths.get(dir + "/vault/" + file.getFileName().toString())), StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            // Encrypt files in new directory
+            filePaths = dh.getDirContent((dir + "/vault"), "file");
+            for (Path file : filePaths){
+                this.processFile(Mode.ENCRYPT, file.toString(), keyString, ivString);
+            }
+
+        }
+
+
+    }
+
 
 
 }

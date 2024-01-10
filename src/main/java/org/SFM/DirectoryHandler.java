@@ -4,8 +4,10 @@ import org.apache.commons.vfs2.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 
 public class DirectoryHandler {
     // Path of current directory
@@ -158,5 +160,22 @@ public class DirectoryHandler {
 
         sortContentArr();
     }
+
+    public ArrayList<Path> getDirContent(String path, String type) throws FileSystemException {
+        FileObject dir = this.fsManager.resolveFile(path);
+
+        ArrayList<Path> toReturn = new ArrayList<>();
+
+        for (FileObject child : dir){
+            if (Objects.equals(type, "dir") && child.getType() == FileType.FOLDER)
+                toReturn.add(child.getPath());
+            if (Objects.equals(type, "file") && child.getType() == FileType.FILE)
+                toReturn.add(child.getPath());
+        }
+
+        return toReturn;
+    }
+
+
 
 }
