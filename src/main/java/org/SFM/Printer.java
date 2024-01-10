@@ -1,10 +1,13 @@
 package org.SFM;
 
 import com.googlecode.lanterna.SGR;
+import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
+import com.googlecode.lanterna.screen.Screen;
+import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
 import org.apache.commons.vfs2.*;
@@ -25,6 +28,8 @@ public class Printer {
     private ArrayList<String> dirToPrint;
     private final int offset;
     private final char pointer;
+    private int rows;
+    private int columns;
 
 
     /**
@@ -63,20 +68,32 @@ public class Printer {
             // Opening title
             this.textGraphics.putString(2, 1, "SFM - Press ESC to exit", SGR.BOLD);
 
+            // Get terminal size
+            TerminalSize terminalSize = terminal.getTerminalSize();
+            this.rows = terminalSize.getRows();
+            this.columns = terminalSize.getColumns();
+
             this.logger_Printer.debug("   Creating window resize listener");
             // Check for window resizing - boilerplate code from lanterna docs
             this.terminal.addResizeListener((terminal1, newSize) -> {
                 // Be careful here though, this is likely running on a separate thread. Lanterna is threadsafe in
                 // a best-effort way so while it shouldn't blow up if you call terminal methods on multiple threads,
                 // it might have unexpected behavior if you don't do any external synchronization
-                this.textGraphics.drawLine(5, 3, newSize.getColumns() - 1, 3, ' ');
-                this.textGraphics.putString(5, 3, "Terminal Size: ", SGR.BOLD);
-                this.textGraphics.putString(5 + "Terminal Size: ".length(), 3, newSize.toString());
                 try {
+                    this.rows = terminalSize.getRows();
+                    this.columns = terminalSize.getColumns();
+
+                    this.textGraphics.drawLine(5, 3, newSize.getColumns() - 1, 3, ' ');
+                    this.textGraphics.putString(5, 3, "Terminal Size: ", SGR.BOLD);
+                    this.textGraphics.putString(5 + "Terminal Size: ".length(), 3, newSize.toString());
+
+                    this.display_controls();
+
                     terminal1.flush();
                 } catch (IOException e) {
-                    logger_Printer.error(Arrays.toString(e.getStackTrace()));
+                    this.logger_Printer.error(e.getMessage());
                 }
+
             });
 
             this.display_directory();
@@ -117,12 +134,15 @@ public class Printer {
                         this.currentHighlight = 0;
                         this.terminal.clearScreen();
                         break;
+                    default:
+                        this.logger_Printer.warn("Unknown key pressed");
+                        break;
                 }
 
                 this.display_directory();
+                this.display_controls();
 
                 // Display content
-                this.terminal.flush();
 
                 // Read key input
                 keyStroke = this.terminal.readInput();
@@ -174,17 +194,30 @@ public class Printer {
      */
     private void display_directory(){
         try {
-            this.logger_Printer.debug("   Retrieving content"); // Get directory content to display
+            this.logger_Printer.debug("Retrieving content"); // Get directory content to display
             this.dirToPrint = new ArrayList<>(this.getDirContent());
 
             // Display directory content
             for (int i = 0; i <= this.dirToPrint.size()-1; i++){
                 if (i == currentHighlight){
-                    textGraphics.putString(5, (i+offset), pointer + " " + this.dirToPrint.get(i));
+                    textGraphics.putString(5, (i+this.offset), pointer + " " + this.dirToPrint.get(i));
                 } else{
-                    textGraphics.putString(5, (i+offset), "  " + this.dirToPrint.get(i));
+                    textGraphics.putString(5, (i+this.offset), "  " + this.dirToPrint.get(i));
                 }
             }
+            this.terminal.flush();
+        } catch (Exception e){
+            this.logger_Printer.error(e.getMessage());
+        }
+    }
+
+    /**
+     * Displays controls at the bottom of the screen
+     */
+    private void display_controls(){
+        try{
+            this.logger_Printer.debug("Printing controls");
+            textGraphics.putString(1, this.rows - 2, "j - up, k - down, a - enter dir, s - exit dir");
             this.terminal.flush();
         } catch (Exception e){
             this.logger_Printer.error(e.getMessage());
