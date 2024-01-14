@@ -207,14 +207,6 @@ public class CryptoHandler {
 
             scanner.close();
 
-            for (Path targetPath : targetPaths){
-                System.out.println("Target path: " + targetPath);
-            }
-
-            for (Path filePath : filePaths){
-                System.out.println("File path: " + filePath);
-            }
-
             // Put each file back to where it belongs
             for (int i = 0; i < filePaths.size(); i++){
                 System.out.println("File path " + filePaths.get(i));
