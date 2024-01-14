@@ -32,11 +32,17 @@ public class Main {
         String passwordPath = properties.getProperty("passwordPath");
 
         // Load classes
+        CryptoHandler ch = new CryptoHandler();
         DirectoryHandler dh = new DirectoryHandler(baseDir);
         Printer p = Printer.getInstance(dh);
-        CryptoHandler eh = new CryptoHandler();
         PasswordHandler ph = PasswordHandler.getInstance(passwordPath);
 
-
+        Scanner scanner = new Scanner(System.in);
+        // TESTING
+        ch.processDirectory(Mode.ENCRYPT, baseDir, "aaaaaaaaaaaaaaaa", "aaaaaaaaaaaaaaaa");
+        System.out.println("Waiting for input...");
+        scanner.nextLine();
+        ch.processDirectory(Mode.DECRYPT, baseDir, "aaaaaaaaaaaaaaaa", "aaaaaaaaaaaaaaaa");
+        scanner.close();
     }
 }
