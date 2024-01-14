@@ -131,9 +131,10 @@ public class CryptoHandler {
      * 2. Create dirs and place files back in original place
      * 3. Delete metadata.json
      *
-     * @param mode
-     * @param keyString
-     * @param ivString
+     * @param mode Mode.ENCRYPT for encryption, Mode.DECRYPT for decryption
+     * @param vaultDir top-level dir to create the vault from
+     * @param keyString 16-byte key
+     * @param ivString 16-byte initialization vector
      */
     public void processDirectory(Mode mode, String vaultDir, String keyString, String ivString) throws Exception {
         Path vaultDirPath = Paths.get(vaultDir);
@@ -158,22 +159,24 @@ public class CryptoHandler {
             FileWriter metadata = new FileWriter(dir + "/vault/manifest.txt");
             this.logger_CryptoHandler.info("Created metadata.txt for dir " + dir);
 
+            // Save list of files
             ArrayList<Path> filePaths = dh.getDirContent(dir, "file");
             for (Path file : filePaths){
                 if (file.getFileName().toString().equals("manifest.txt"))
                     continue;
-                metadata.write(file.toString() + "\n");
+                metadata.write(file + "\n");
             }
             metadata.close();
 
-            // Copy files into new directory
+            // Copy files into new directory, then delete the old one
             for (Path file : filePaths){
                 if (file.getFileName().toString().equals("manifest.txt"))
                     continue;
-                this.logger_CryptoHandler.debug("Copying " + file.toString() + " to " + (dir+"/vault"));
+                this.logger_CryptoHandler.debug("Copying " + file + " to " + (dir+"/vault"));
                 Files.copy(file, (Paths.get(dir + "/vault/" + file.getFileName().toString())), StandardCopyOption.REPLACE_EXISTING);
             }
 
+            // Delete empty directories
             ArrayList<Path> dirPaths = dh.getDirContent(vaultDir, "dir");
             for (Path dirPath : dirPaths){
                 Files.walkFileTree(dirPath, new DeletingFileVisitor());
@@ -187,17 +190,18 @@ public class CryptoHandler {
             }
         } else if (mode == Mode.DECRYPT){
             this.logger_CryptoHandler.info("DECRYPTING VAULT");
-            // Decrypt files in vault
+            // Get the files from the vault
             ArrayList<Path> filePaths = dh.getDirContent(dir + "/vault", "file");
             Path toRemove = null;
+            // Decrypt each file
             for (Path file : filePaths){
-                if (file.getFileName().toString().equals("manifest.txt"))
+                if (file.getFileName().toString().equals("manifest.txt")) // Decrypt the manifest file, but remove it from the list
                     toRemove = file;
-                this.processFile(Mode.DECRYPT, file.toString(), keyString, ivString);
+                this.processFile(Mode.DECRYPT, file.toString(), keyString, ivString); //
             }
             filePaths.remove(toRemove);
 
-            // Get the list of file paths
+            // Get the list of file paths from the manifest file
             ArrayList<Path> targetPaths = new ArrayList<>();
             File metadata = new File(dir + "/vault/manifest.txt");
             Scanner scanner = new Scanner(metadata);
@@ -217,6 +221,7 @@ public class CryptoHandler {
                 Files.copy(filePaths.get(i), targetPaths.get(i), StandardCopyOption.REPLACE_EXISTING);
             }
 
+            // Delete the vault
             Files.walkFileTree(Path.of(dir + "/vault"), new DeletingFileVisitor());
 
         }
