@@ -1,6 +1,5 @@
 package org.SFM;
 
-import org.apache.commons.vfs2.FileObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
@@ -12,12 +11,14 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.security.*;
 import java.util.ArrayList;
+import java.util.Scanner;
+
+import java.io.IOException;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 
 
 public class CryptoHandler {
@@ -136,18 +137,11 @@ public class CryptoHandler {
      * @param ivString
      */
     public void processDirectory(Mode mode, String dir, String keyString, String ivString) throws Exception {
+        Path dirUp = Paths.get(dir);
+        dir = dirUp.getParent().toString();
+        DirectoryHandler dh = new DirectoryHandler(dir);
         if (mode == Mode.ENCRYPT){
-            DirectoryHandler dh = new DirectoryHandler(dir);
-
-            // Create list of files
-            FileWriter metadata = new FileWriter(dir + "/metadata.txt");
-            this.logger_CryptoHandler.info("Created metadata.txt for dir " + dir);
-
-            ArrayList<Path> filePaths = dh.getDirContent(dir, "file");
-            for (Path file : filePaths){
-                metadata.write(file.toString() + "\n");
-            }
-            metadata.close();
+            this.logger_CryptoHandler.info("ENCRYPTING VAULT");
 
             // Create new directory
             File newDirectory = new File(dir + "/vault");
@@ -161,20 +155,93 @@ public class CryptoHandler {
                 }
             }
 
+            // Create list of files
+            FileWriter metadata = new FileWriter(dir + "/vault/manifest.txt");
+            this.logger_CryptoHandler.info("Created metadata.txt for dir " + dir);
+
+            ArrayList<Path> filePaths = dh.getDirContent(dir, "file");
+            for (Path file : filePaths){
+                if (file.getFileName().toString().equals("manifest.txt"))
+                    continue;
+                metadata.write(file.toString() + "\n");
+            }
+            metadata.close();
+
             // Copy files into new directory
             for (Path file : filePaths){
+                if (file.getFileName().toString().equals("manifest.txt"))
+                    continue;
                 this.logger_CryptoHandler.debug("Copying " + file.toString() + " to " + (dir+"/vault"));
                 Files.copy(file, (Paths.get(dir + "/vault/" + file.getFileName().toString())), StandardCopyOption.REPLACE_EXISTING);
+                Files.walkFileTree(file, new DeletingFileVisitor());
             }
 
             // Encrypt files in new directory
             filePaths = dh.getDirContent((dir + "/vault"), "file");
             for (Path file : filePaths){
+                this.logger_CryptoHandler.debug("Encrypting " + file);
                 this.processFile(Mode.ENCRYPT, file.toString(), keyString, ivString);
             }
+        } else if (mode == Mode.DECRYPT){
+            this.logger_CryptoHandler.info("DECRYPTING VAULT");
+            // Decrypt files in vault
+            ArrayList<Path> filePaths = dh.getDirContent(dir + "/vault", "file");
+            Path toRemove = null;
+            for (Path file : filePaths){
+                if (file.getFileName().toString().equals("manifest.txt"))
+                    toRemove = file;
+                this.processFile(Mode.DECRYPT, file.toString(), keyString, ivString);
+            }
+            filePaths.remove(toRemove);
+
+            // Get the list of file paths
+            ArrayList<Path> targetPaths = new ArrayList<>();
+            File metadata = new File(dir + "/vault/manifest.txt");
+            Scanner scanner = new Scanner(metadata);
+
+            while (scanner.hasNextLine()){
+                Path path = Path.of(scanner.nextLine());
+                targetPaths.add(path);
+                this.logger_CryptoHandler.debug("Added " + path);
+            }
+
+            scanner.close();
+
+            for (Path targetPath : targetPaths){
+                System.out.println("Target path: " + targetPath);
+            }
+
+            for (Path filePath : filePaths){
+                System.out.println("File path: " + filePath);
+            }
+
+            // Put each file back to where it belongs
+            for (int i = 0; i < filePaths.size(); i++){
+                System.out.println("File path " + filePaths.get(i));
+                Files.createDirectories(targetPaths.get(i).getParent());
+                Files.copy(filePaths.get(i), targetPaths.get(i), StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            Files.walkFileTree(Path.of(dir + "/vault"), new DeletingFileVisitor());
 
         }
 
+
+
+    }
+
+    static class DeletingFileVisitor extends SimpleFileVisitor<Path>{
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            Files.delete(file);
+            return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+            Files.delete(dir);
+            return FileVisitResult.CONTINUE;
+        }
 
     }
 
