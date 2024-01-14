@@ -132,13 +132,12 @@ public class CryptoHandler {
      * 3. Delete metadata.json
      *
      * @param mode
-     * @param dir
      * @param keyString
      * @param ivString
      */
-    public void processDirectory(Mode mode, String dir, String keyString, String ivString) throws Exception {
-        Path dirUp = Paths.get(dir);
-        dir = dirUp.getParent().toString();
+    public void processDirectory(Mode mode, String vaultDir, String keyString, String ivString) throws Exception {
+        Path vaultDirPath = Paths.get(vaultDir);
+        String dir = vaultDirPath.getParent().toString();
         DirectoryHandler dh = new DirectoryHandler(dir);
         if (mode == Mode.ENCRYPT){
             this.logger_CryptoHandler.info("ENCRYPTING VAULT");
@@ -173,7 +172,11 @@ public class CryptoHandler {
                     continue;
                 this.logger_CryptoHandler.debug("Copying " + file.toString() + " to " + (dir+"/vault"));
                 Files.copy(file, (Paths.get(dir + "/vault/" + file.getFileName().toString())), StandardCopyOption.REPLACE_EXISTING);
-                Files.walkFileTree(file, new DeletingFileVisitor());
+            }
+
+            ArrayList<Path> dirPaths = dh.getDirContent(vaultDir, "dir");
+            for (Path dirPath : dirPaths){
+                Files.walkFileTree(dirPath, new DeletingFileVisitor());
             }
 
             // Encrypt files in new directory
