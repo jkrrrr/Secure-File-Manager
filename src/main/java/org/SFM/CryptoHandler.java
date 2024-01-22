@@ -22,6 +22,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 
 public class CryptoHandler {
+    private static CryptoHandler instance = null;
     private final Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
     private final Argon2PasswordEncoder arg2;
     private final Logger logger_CryptoHandler;
@@ -40,6 +41,13 @@ public class CryptoHandler {
             throw new Exception();
         }
     }
+
+    public static CryptoHandler getInstance() throws Exception {
+        if (instance == null)
+            instance = new CryptoHandler();
+        return instance;
+    }
+
 
     /**
      * Encrypts/Decrypts a single file

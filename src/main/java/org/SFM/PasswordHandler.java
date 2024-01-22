@@ -9,7 +9,7 @@ import java.util.Scanner;
 
 public class PasswordHandler {
     private static PasswordHandler instance = null;
-    private final String path;
+    private String path;
     private ArrayList<String> hashes;
     private final CryptoHandler cryptoHandler;
     private final Logger logger_PasswordHandler;
@@ -17,16 +17,14 @@ public class PasswordHandler {
 
     /**
      * Password management
-     * @param path path to file containing hashed passwords
      */
-    private PasswordHandler(String path) throws Exception {
+    private PasswordHandler() throws Exception {
         this.logger_PasswordHandler = LoggerFactory.getLogger(PasswordHandler.class);
         this.logger_PasswordHandler.info("PasswordHandler logger instantiated (" + path + ")");
 
         try{
-            this.path = path;
             this.hashes = new ArrayList<>();
-            this.cryptoHandler = new CryptoHandler();
+            this.cryptoHandler = CryptoHandler.getInstance();
         } catch (Exception e){
             this.logger_PasswordHandler.error(e.getMessage());
             throw new Exception();
@@ -37,13 +35,20 @@ public class PasswordHandler {
 
     /**
      * Singleton checking
-     * @param path path to file contained hashed passwords
      * @return instance of PasswordHandler
      */
-    public static PasswordHandler getInstance(String path) throws Exception{
+    public static PasswordHandler getInstance() throws Exception{
         if (instance == null)
-            instance = new PasswordHandler(path);
+            instance = new PasswordHandler();
         return instance;
+    }
+
+    /**
+     * Sets the path of the password file
+     * @param path path of the password file
+     */
+    public void setPath(String path){
+        this.path = path;
     }
 
     /**
@@ -51,13 +56,10 @@ public class PasswordHandler {
      * @param password password to check
      * @return true if in password file, otherwise false
      */
-    public boolean checkPassword(String password){
-        String hash = this.cryptoHandler.processPassword(password);
-
-        this.logger_PasswordHandler.info("Searching for " + hash);
-
+    public boolean checkLogin(String username, String password){
+        this.updateHashes();
         for (String s : this.hashes){
-            if (this.cryptoHandler.verifyPassword(password, s))
+            if (this.cryptoHandler.verifyPassword((username + "/,/" + password), s.strip()))
                 return true;
         }
 
@@ -68,11 +70,10 @@ public class PasswordHandler {
      * Appends a password to the file, hashed
      * @param password password to hash and store
      */
-    public void insertPassword(String password) throws IOException {
+    public void insertLogin(String username, String password) throws IOException {
         try{
-            String hash = this.cryptoHandler.processPassword(password);
-
-            this.logger_PasswordHandler.info("Inserting " + hash + " to passwords");
+            String toHash = username + "/,/" + password;
+            String hash = this.cryptoHandler.processPassword(toHash);
 
             FileWriter writer = new FileWriter(path, true);
 
@@ -99,7 +100,7 @@ public class PasswordHandler {
             Scanner reader = new Scanner(file);
 
             while(reader.hasNextLine()){
-                String line = reader.nextLine();
+                String line = reader.nextLine().strip();
                 this.hashes.add(line);
             }
             reader.close();
