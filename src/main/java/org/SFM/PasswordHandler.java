@@ -58,12 +58,8 @@ public class PasswordHandler {
      */
     public boolean checkLogin(String username, String password){
         this.updateHashes();
-        for (String s : this.hashes){
-            if (this.cryptoHandler.verifyPassword((username + "/,/" + password), s.strip()))
-                return true;
-        }
-
-        return false;
+        return this.hashes.parallelStream()
+                .anyMatch(s -> this.cryptoHandler.verifyPassword((username + "/,/" + password), s.strip()));
     }
 
     /**
