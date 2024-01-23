@@ -33,10 +33,34 @@ public class MainTest {
         this.ph.setPath(passwordPath);
         this.ah = new AccessHandler();
 
+        String username = "user a";
+        String password = "user a";
+
+        ah.createUser(username, password);
+
+
     }
 
     @Test
-    public void testCreateUser() throws Exception {
+    public void test_createUser(){
+        String username = RandomStringUtils.random(10, true, true);
+        String password = RandomStringUtils.random(10, true, true);
+
+        boolean result = ah.createUser(username, password);
+
+        assertTrue(result);
+
+    }
+
+    @Test
+    public void test_authenticateUser() throws Exception {
+        boolean result = ah.authenticate("user a", "user a");
+
+        assertTrue(result);
+    }
+
+    @Test
+    public void test_authenticateUserMulti() throws Exception {
         String username = RandomStringUtils.random(10, true, true);
         String password = RandomStringUtils.random(10, true, true);
 
