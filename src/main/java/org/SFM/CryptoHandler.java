@@ -1,5 +1,8 @@
 package org.SFM;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
@@ -8,15 +11,15 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
+import java.io.*;
+import java.lang.reflect.Type;
+import java.nio.Buffer;
 import java.nio.file.*;
 import java.security.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
-import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 
@@ -163,22 +166,30 @@ public class CryptoHandler {
                 }
             }
 
+            // TODO manifest as json file
             // Create list of files
-            FileWriter metadata = new FileWriter(dir + "/vault/manifest.txt");
             this.logger_CryptoHandler.info("Created metadata.txt for dir " + dir);
 
             // Save list of files
+            Gson gson = new Gson();
             ArrayList<Path> filePaths = dh.getDirContent(dir, "file");
+            ArrayList<FileObj> fileObjs = new ArrayList<>();
             for (Path file : filePaths){
-                if (file.getFileName().toString().equals("manifest.txt"))
+                if (file.getFileName().toString().equals("manifest.json"))
                     continue;
-                metadata.write(file + "\n");
+                fileObjs.add(new FileObj(file.toString()));
             }
-            metadata.close();
+
+            Gson gsonBuilder = new GsonBuilder().setPrettyPrinting().create();
+            String json = gsonBuilder.toJson(fileObjs);
+
+            try (FileWriter writer = new FileWriter(dir + "/vault/manifest.json")){
+                writer.write(json);
+            }
 
             // Copy files into new directory, then delete the old one
             for (Path file : filePaths){
-                if (file.getFileName().toString().equals("manifest.txt"))
+                if (file.getFileName().toString().equals("manifest.json"))
                     continue;
                 this.logger_CryptoHandler.debug("Copying " + file + " to " + (dir+"/vault"));
                 Files.copy(file, (Paths.get(dir + "/vault/" + file.getFileName().toString())), StandardCopyOption.REPLACE_EXISTING);
@@ -198,35 +209,39 @@ public class CryptoHandler {
             }
         } else if (mode == Mode.DECRYPT){
             this.logger_CryptoHandler.info("DECRYPTING VAULT");
+            Gson gson = new Gson();
             // Get the files from the vault
             ArrayList<Path> filePaths = dh.getDirContent(dir + "/vault", "file");
             Path toRemove = null;
             // Decrypt each file
             for (Path file : filePaths){
-                if (file.getFileName().toString().equals("manifest.txt")) // Decrypt the manifest file, but remove it from the list
-                    toRemove = file;
-                this.processFile(Mode.DECRYPT, file.toString(), keyString, ivString); //
-            }
-            filePaths.remove(toRemove);
-
-            // Get the list of file paths from the manifest file
-            ArrayList<Path> targetPaths = new ArrayList<>();
-            File metadata = new File(dir + "/vault/manifest.txt");
-            Scanner scanner = new Scanner(metadata);
-
-            while (scanner.hasNextLine()){
-                Path path = Path.of(scanner.nextLine());
-                targetPaths.add(path);
-                this.logger_CryptoHandler.debug("Added " + path);
+                this.processFile(Mode.DECRYPT, file.toString(), keyString, ivString);
             }
 
-            scanner.close();
+            // Get content from manifest.json
+            String existingJson = null;
+            String jsonPath = dir + "/vault/manifest.json";
+            try{
+                StringBuilder content = new StringBuilder();
+                BufferedReader reader = new BufferedReader(new FileReader(jsonPath));
+                String line;
+                while((line = reader.readLine()) != null){
+                    content.append(line);
+                }
+                reader.close();
+                existingJson = content.toString();
+            } catch (IOException e){
+                this.logger_CryptoHandler.error("manifest.json not found!\n" + e.getMessage());
+            }
+
+            Type listType = new TypeToken<List<FileObj>>() {}.getType();
+            ArrayList<FileObj> fileObjs = gson.fromJson(existingJson, listType);
 
             // Put each file back to where it belongs
-            for (int i = 0; i < filePaths.size(); i++){
-                System.out.println("File path " + filePaths.get(i));
-                Files.createDirectories(targetPaths.get(i).getParent());
-                Files.copy(filePaths.get(i), targetPaths.get(i), StandardCopyOption.REPLACE_EXISTING);
+            for (int i = 0; i < fileObjs.size(); i++){
+                System.out.println("FileObj path " + filePaths.get(i));
+                Files.createDirectories(Path.of(fileObjs.get(i).getPath()).getParent());
+                Files.copy(filePaths.get(i), Path.of(fileObjs.get(i).getPath()), StandardCopyOption.REPLACE_EXISTING);
             }
 
             // Delete the vault
