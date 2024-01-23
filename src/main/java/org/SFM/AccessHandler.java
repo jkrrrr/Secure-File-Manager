@@ -41,14 +41,17 @@ public class AccessHandler {
      * @throws Exception could not find a private key for the user
      */
     public boolean authenticate(String user, String password) throws Exception {
+        this.logger_AccessHandler.info("Authenticating user " + user);
         // Check correct details
         if (!ph.checkLogin(user, password))
             return false;
 
+        // TODO unencrypt privateKeys.json
         // Retrieve private key from JSON
         // Create a HashMap of each identifier and associated private key
         Map<String, String> recordMap = new HashMap<>();
         try (Reader reader = new FileReader(this.jsonPath_privateKey)){
+            this.logger_AccessHandler.debug("Retrieving privateKeys.json");
             Gson gson = new Gson();
             JsonArray jsonArray = gson.fromJson(reader, JsonArray.class);
 
@@ -64,7 +67,10 @@ public class AccessHandler {
             this.logger_AccessHandler.warn(e.getMessage());
         }
 
+        // TODO encrypt privateKeys.json
+
         // Check for the correct identifier
+        this.logger_AccessHandler.debug("Checking for correct identifier");
         for (String id : recordMap.keySet()){
             if (this.ch.verifyPassword(password, id)){
                 this.privateKey = recordMap.get(id);
@@ -88,7 +94,7 @@ public class AccessHandler {
      * @param user username
      * @param password password
      */
-    public void createUser(String user, String password) {
+    public boolean createUser(String user, String password) {
         try {
             ph.insertLogin(user, password);
 
@@ -135,8 +141,12 @@ public class AccessHandler {
                 this.logger_AccessHandler.error(e.getMessage());
             }
 
+            this.logger_AccessHandler.info("User {} successfully created", user);
+            return true;
+
         } catch (Exception e) {
             this.logger_AccessHandler.error(e.getMessage());
+            return false;
         }
     }
 
