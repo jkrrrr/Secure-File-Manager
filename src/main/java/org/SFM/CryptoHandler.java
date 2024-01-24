@@ -3,6 +3,7 @@ package org.SFM;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
@@ -166,18 +167,20 @@ public class CryptoHandler {
                 }
             }
 
-            // TODO manifest as json file
             // Create list of files
-            this.logger_CryptoHandler.info("Created metadata.txt for dir " + dir);
+            this.logger_CryptoHandler.info("Created metadata.json for dir " + dir);
 
             // Save list of files
             Gson gson = new Gson();
             ArrayList<Path> filePaths = dh.getDirContent(dir, "file");
             ArrayList<FileObj> fileObjs = new ArrayList<>();
             for (Path file : filePaths){
-                if (file.getFileName().toString().equals("manifest.json"))
-                    continue;
-                fileObjs.add(new FileObj(file.toString()));
+//                if (file.getFileName().toString().equals("manifest.json"))
+//                    continue;
+                String newName = RandomStringUtils.random(10, true, true);
+                String originalName = file.getFileName().toString();
+                FileObj fileObj = new FileObj(file.toString(), originalName, newName);
+                fileObjs.add(fileObj);
             }
 
             Gson gsonBuilder = new GsonBuilder().setPrettyPrinting().create();
@@ -188,11 +191,8 @@ public class CryptoHandler {
             }
 
             // Copy files into new directory, then delete the old one
-            for (Path file : filePaths){
-                if (file.getFileName().toString().equals("manifest.json"))
-                    continue;
-                this.logger_CryptoHandler.debug("Copying " + file + " to " + (dir+"/vault"));
-                Files.copy(file, (Paths.get(dir + "/vault/" + file.getFileName().toString())), StandardCopyOption.REPLACE_EXISTING);
+            for (FileObj file : fileObjs){
+                Files.copy(Paths.get(file.getPath()), (Paths.get(dir + "/vault/" + file.getNewName())), StandardCopyOption.REPLACE_EXISTING);
             }
 
             // Delete empty directories
@@ -240,8 +240,8 @@ public class CryptoHandler {
             // Put each file back to where it belongs
             for (int i = 0; i < fileObjs.size(); i++){
                 System.out.println("FileObj path " + filePaths.get(i));
-                Files.createDirectories(Path.of(fileObjs.get(i).getPath()).getParent());
-                Files.copy(filePaths.get(i), Path.of(fileObjs.get(i).getPath()), StandardCopyOption.REPLACE_EXISTING);
+                Files.createDirectories(Paths.get(fileObjs.get(i).getPath()).getParent());
+                Files.copy(filePaths.get(i), Paths.get(fileObjs.get(i).getPath()), StandardCopyOption.REPLACE_EXISTING);
             }
 
             // Delete the vault
