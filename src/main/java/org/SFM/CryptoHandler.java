@@ -175,8 +175,6 @@ public class CryptoHandler {
             ArrayList<Path> filePaths = dh.getDirContent(dir, "file");
             ArrayList<FileObj> fileObjs = new ArrayList<>();
             for (Path file : filePaths){
-//                if (file.getFileName().toString().equals("manifest.json"))
-//                    continue;
                 String newName = RandomStringUtils.random(10, true, true);
                 String originalName = file.getFileName().toString();
                 FileObj fileObj = new FileObj(file.toString(), originalName, newName);
@@ -238,11 +236,17 @@ public class CryptoHandler {
             ArrayList<FileObj> fileObjs = gson.fromJson(existingJson, listType);
 
             // Put each file back to where it belongs
-            for (int i = 0; i < fileObjs.size(); i++){
-                System.out.println("FileObj path " + filePaths.get(i));
-                Files.createDirectories(Paths.get(fileObjs.get(i).getPath()).getParent());
-                Files.copy(filePaths.get(i), Paths.get(fileObjs.get(i).getPath()), StandardCopyOption.REPLACE_EXISTING);
+            for (FileObj fileObj : fileObjs){
+                Files.createDirectories(Paths.get(fileObj.getPath()).getParent());
+                Files.copy(Paths.get(dir + "/vault/" + fileObj.getNewName()), Paths.get(fileObj.getPath()), StandardCopyOption.REPLACE_EXISTING);
             }
+
+
+//            for (int i = 0; i < fileObjs.size(); i++){
+//                System.out.println("FileObj path " + filePaths.get(i));
+//                Files.createDirectories(Paths.get(fileObjs.get(i).getPath()).getParent());
+//                Files.copy(filePaths.get(i), Paths.get(fileObjs.get(i).getPath()), StandardCopyOption.REPLACE_EXISTING);
+//            }
 
             // Delete the vault
             Files.walkFileTree(Path.of(dir + "/vault"), new DeletingFileVisitor());
