@@ -15,14 +15,19 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.Buffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 
 public class CryptoHandler {
@@ -30,6 +35,7 @@ public class CryptoHandler {
     private final Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
     private final Argon2PasswordEncoder arg2;
     private final Logger logger_CryptoHandler;
+    private ExecutorService executorService = null;
 
     /**
      * Responsible for encrypting objects
@@ -60,7 +66,7 @@ public class CryptoHandler {
      * @param keyString 16-byte key
      * @param ivString 16-byte initialization vector
      */
-    public void processFile(Mode mode, String file, String keyString, String ivString) {
+    public synchronized void processFile(Mode mode, String file, String keyString, String ivString) {
         try{
             this.logger_CryptoHandler.info("Processing file %s (%s)".formatted(file, mode.toString()));
 
@@ -171,7 +177,6 @@ public class CryptoHandler {
             this.logger_CryptoHandler.info("Created metadata.json for dir " + dir);
 
             // Save list of files
-            Gson gson = new Gson();
             ArrayList<Path> filePaths = dh.getDirContent(dir, "file");
             ArrayList<FileObj> fileObjs = new ArrayList<>();
             for (Path file : filePaths){
@@ -181,6 +186,7 @@ public class CryptoHandler {
                 fileObjs.add(fileObj);
             }
 
+            // Convert into JSON
             Gson gsonBuilder = new GsonBuilder().setPrettyPrinting().create();
             String json = gsonBuilder.toJson(fileObjs);
 
@@ -189,9 +195,19 @@ public class CryptoHandler {
             }
 
             // Copy files into new directory, then delete the old one
-            for (FileObj file : fileObjs){
-                Files.copy(Paths.get(file.getPath()), (Paths.get(dir + "/vault/" + file.getNewName())), StandardCopyOption.REPLACE_EXISTING);
+            this.executorService = Executors.newFixedThreadPool(fileObjs.size()); // Adjust the pool size as needed
+            for (FileObj file : fileObjs) {
+                executorService.submit(() -> {
+                    try {
+                        Files.copy(Paths.get(file.getPath()), Paths.get(dir + "/vault/" + file.getNewName()), StandardCopyOption.REPLACE_EXISTING);
+                        this.logger_CryptoHandler.debug(Thread.currentThread().getName() + ": Copied " + file.getPath());
+                    } catch (IOException e) {
+                        this.logger_CryptoHandler.error(e.getMessage());
+                    }
+                });
             }
+            executorService.shutdown();
+            this.executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
             // Delete empty directories
             ArrayList<Path> dirPaths = dh.getDirContent(vaultDir, "dir");
@@ -200,37 +216,42 @@ public class CryptoHandler {
             }
 
             // Encrypt files in new directory
+            this.executorService = Executors.newFixedThreadPool(fileObjs.size()); // Adjust the pool size as needed
             filePaths = dh.getDirContent((dir + "/vault"), "file");
-            for (Path file : filePaths){
-                this.logger_CryptoHandler.debug("Encrypting " + file);
-                this.processFile(Mode.ENCRYPT, file.toString(), keyString, ivString);
+            System.out.println("Encrypting files");
+            for (Path file : filePaths) {
+                executorService.submit(() -> {
+                    try {
+                        logger_CryptoHandler.debug("Encrypting " + file);
+                        processFile(Mode.ENCRYPT, file.toString(), keyString, ivString);
+                        this.logger_CryptoHandler.debug(Thread.currentThread().getName() + ": Encrypted " + file);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
             }
+            executorService.shutdown();
+            this.executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } else if (mode == Mode.DECRYPT){
             this.logger_CryptoHandler.info("DECRYPTING VAULT");
             Gson gson = new Gson();
             // Get the files from the vault
             ArrayList<Path> filePaths = dh.getDirContent(dir + "/vault", "file");
-            Path toRemove = null;
+            System.out.println("Decrypting files");
             // Decrypt each file
-            for (Path file : filePaths){
-                this.processFile(Mode.DECRYPT, file.toString(), keyString, ivString);
+            this.executorService = Executors.newFixedThreadPool(filePaths.size()); // Adjust the pool size as needed
+            for (Path file : filePaths) {
+                executorService.submit(() -> {
+                    this.processFile(Mode.DECRYPT, file.toString(), keyString, ivString);
+                });
             }
+            this.executorService.shutdown();
+            this.executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
             // Get content from manifest.json
-            String existingJson = null;
             String jsonPath = dir + "/vault/manifest.json";
-            try{
-                StringBuilder content = new StringBuilder();
-                BufferedReader reader = new BufferedReader(new FileReader(jsonPath));
-                String line;
-                while((line = reader.readLine()) != null){
-                    content.append(line);
-                }
-                reader.close();
-                existingJson = content.toString();
-            } catch (IOException e){
-                this.logger_CryptoHandler.error("manifest.json not found!\n" + e.getMessage());
-            }
+            System.out.println("Getting info from manifest");
+            String existingJson = Files.readString(Paths.get(jsonPath));
 
             Type listType = new TypeToken<List<FileObj>>() {}.getType();
             ArrayList<FileObj> fileObjs = gson.fromJson(existingJson, listType);
@@ -241,19 +262,10 @@ public class CryptoHandler {
                 Files.copy(Paths.get(dir + "/vault/" + fileObj.getNewName()), Paths.get(fileObj.getPath()), StandardCopyOption.REPLACE_EXISTING);
             }
 
-
-//            for (int i = 0; i < fileObjs.size(); i++){
-//                System.out.println("FileObj path " + filePaths.get(i));
-//                Files.createDirectories(Paths.get(fileObjs.get(i).getPath()).getParent());
-//                Files.copy(filePaths.get(i), Paths.get(fileObjs.get(i).getPath()), StandardCopyOption.REPLACE_EXISTING);
-//            }
-
             // Delete the vault
             Files.walkFileTree(Path.of(dir + "/vault"), new DeletingFileVisitor());
 
         }
-
-
 
     }
 
