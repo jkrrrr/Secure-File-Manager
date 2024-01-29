@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 
@@ -19,6 +20,7 @@ public class AccessHandler {
     private byte[] privateKey;
 
     private final String jsonPath_authentication = "authentication.json";
+    private final String jsonPath_publicKeys = "publicKeys.json";
 
 
     /**
@@ -91,7 +93,7 @@ public class AccessHandler {
             Gson gson = new Gson();
             try (Reader reader = new FileReader(jsonPath_authentication)) {
                 // Hash username+password
-                String authenticationString = this.ch.hashString(user+password);
+                String authenticationString = this.ch.hashString(user + password);
                 // Get private key
                 byte[] privateKey = keyPair.getPrivate().getEncoded();
                 // Encrypt private key
@@ -113,16 +115,31 @@ public class AccessHandler {
                 return false;
             }
 
-            this.logger_AccessHandler.info("User {} successfully created", user);
-            return true;
+            try (Reader reader = new FileReader(jsonPath_publicKeys)) {
+                // JSON processing
+                JsonArray jsonArray = gson.fromJson(reader, JsonArray.class);
 
-        } catch (Exception e) {
-            this.logger_AccessHandler.error(e.getMessage());
-            return false;
+                JsonObject newUser = new JsonObject();
+                newUser.addProperty("user", user);
+                newUser.addProperty("publicKey", Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()));
+
+                jsonArray.add(newUser);
+                try (FileWriter writer = new FileWriter(jsonPath_publicKeys)) {
+                    gson.toJson(jsonArray, writer);
+                }
+                this.logger_AccessHandler.info("User {} successfully created", user);
+                return true;
+
+            } catch (Exception e) {
+                this.logger_AccessHandler.error(e.getMessage());
+                return false;
+            }
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    // Encrypt symmetric key with a user's asymmetric key
+        // Encrypt symmetric key with a user's asymmetric key
 
 
 }
