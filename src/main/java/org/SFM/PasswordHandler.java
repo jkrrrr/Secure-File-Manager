@@ -8,14 +8,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Scanner;
 
 public class PasswordHandler {
     private static PasswordHandler instance = null;
     private String path;
-    private HashMap<String, String> recordMap;
+    private final HashMap<String, String> recordMap;
     private final CryptoHandler cryptoHandler;
     private final Logger logger_PasswordHandler;
 
@@ -68,26 +66,6 @@ public class PasswordHandler {
                 return true;
         }
         return false;
-    }
-
-    /**
-     * Appends a password to the file, hashed
-     * @param password password to hash and store
-     */
-    public void insertLogin(String username, String password, String publicKey, String privateKey) throws IOException {
-        try{
-            String toHash = username + "/,/" + password;
-            String hash = this.cryptoHandler.hashString(toHash);
-
-            FileWriter writer = new FileWriter(path, true);
-
-            writer.write(hash + "\n");
-            writer.close();
-        } catch (Exception e){
-            this.logger_PasswordHandler.error(e.getMessage());
-        }
-
-        updateHashes();
     }
 
     /**

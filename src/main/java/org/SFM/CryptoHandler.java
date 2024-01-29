@@ -8,9 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -33,7 +31,6 @@ public class CryptoHandler {
     private final Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
     private final Argon2PasswordEncoder arg2;
     private final Logger logger_CryptoHandler;
-    private ExecutorService executorService = null;
 
     /**
      * Responsible for encrypting objects
@@ -176,6 +173,7 @@ public class CryptoHandler {
         Path vaultDirPath = Paths.get(vaultDir);
         String dir = vaultDirPath.getParent().toString();
         DirectoryHandler dh = new DirectoryHandler(dir);
+        ExecutorService executorService;
         if (mode == Mode.ENCRYPT){
             this.logger_CryptoHandler.info("ENCRYPTING VAULT");
 
@@ -213,7 +211,7 @@ public class CryptoHandler {
             }
 
             // Copy files into new directory, then delete the old one
-            this.executorService = Executors.newFixedThreadPool(fileObjs.size()); // Adjust the pool size as needed
+            executorService = Executors.newFixedThreadPool(fileObjs.size()); // Adjust the pool size as needed
             for (FileObj file : fileObjs) {
                 executorService.submit(() -> {
                     try {
@@ -225,7 +223,7 @@ public class CryptoHandler {
                 });
             }
             executorService.shutdown();
-            this.executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
             // Delete empty directories
             ArrayList<Path> dirPaths = dh.getDirContent(vaultDir, "dir");
@@ -234,7 +232,7 @@ public class CryptoHandler {
             }
 
             // Encrypt files in new directory
-            this.executorService = Executors.newFixedThreadPool(fileObjs.size()); // Adjust the pool size as needed
+            executorService = Executors.newFixedThreadPool(fileObjs.size()); // Adjust the pool size as needed
             filePaths = dh.getDirContent((dir + "/vault"), "file");
             System.out.println("Encrypting files");
             for (Path file : filePaths) {
@@ -249,7 +247,7 @@ public class CryptoHandler {
                 });
             }
             executorService.shutdown();
-            this.executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } else if (mode == Mode.DECRYPT){
             this.logger_CryptoHandler.info("DECRYPTING VAULT");
             Gson gson = new Gson();
@@ -257,12 +255,12 @@ public class CryptoHandler {
             ArrayList<Path> filePaths = dh.getDirContent(dir + "/vault", "file");
             System.out.println("Decrypting files");
             // Decrypt each file
-            this.executorService = Executors.newFixedThreadPool(filePaths.size()); // Adjust the pool size as needed
+            executorService = Executors.newFixedThreadPool(filePaths.size()); // Adjust the pool size as needed
             for (Path file : filePaths) {
                 executorService.submit(() -> this.processFile(Mode.DECRYPT, file.toString(), keyString, ivString));
             }
-            this.executorService.shutdown();
-            this.executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            executorService.shutdown();
+            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
             // Get content from manifest.json
             String jsonPath = dir + "/vault/manifest.json";

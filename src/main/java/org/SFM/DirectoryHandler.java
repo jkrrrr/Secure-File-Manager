@@ -71,7 +71,7 @@ public class DirectoryHandler {
             if (!this.currentDir[index].isFolder())
                 return false;
 
-            // Update the path to the new subfolder
+            // Update the path to the new sub-folder
             this.currentDirPath = String.valueOf(this.currentDir[index].getName());
 
             updateTree();

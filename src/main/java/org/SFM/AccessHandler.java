@@ -9,34 +9,30 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
 
 
 public class AccessHandler {
     private final Logger logger_AccessHandler;
-    private PasswordHandler ph;
-    private CryptoHandler ch;
+    private final PasswordHandler ph;
+    private final CryptoHandler ch;
     private byte[] privateKey;
 
-    private final String salt = "BTtsI0zG7wFlQdT0";
-    private final String jsonPath_publicKey = "publicKeys.json";
     private final String jsonPath_authentication = "authentication.json";
 
-    private String test;
 
+    /**
+     * Responsible for authenticating user and creating new accounts
+     * @throws Exception singleton error
+     */
     public AccessHandler() throws Exception {
         this.logger_AccessHandler = LoggerFactory.getLogger(AccessHandler.class);
         this.ph = PasswordHandler.getInstance();
         this.ch = CryptoHandler.getInstance();
     }
 
-    // FUNCTIONS
-
     /**
-     * Authenicates a user into the system, then sets their private key
+     * Authenticates a user into the system, then sets their private key
      * @param user username
      * @param password password
      * @return true if the username and password are correct, otherwise false
@@ -50,7 +46,6 @@ public class AccessHandler {
 
         // Retrieve private key from JSON
         // Create a HashMap of each identifier and associated private key
-        Map<String, String> recordMap = new HashMap<>();
         try (Reader reader = new FileReader(this.jsonPath_authentication)){
             this.logger_AccessHandler.debug("Retrieving authentication.json");
             Gson gson = new Gson();
@@ -62,19 +57,13 @@ public class AccessHandler {
                 String id = jsonObject.get("authenticationString").getAsString();
                 String privateKey = jsonObject.get("privateKey").getAsString();
 
-                recordMap.put(id, privateKey);
+                if (this.ch.verifyPassword(user+password, id)){
+                    this.privateKey = this.ch.processByteArr(Mode.DECRYPT, Base64.getDecoder().decode(privateKey), this.ch.hashString_SHA(password), null);
+                    break;
+                }
             }
         } catch (IOException e){
             this.logger_AccessHandler.warn(e.getMessage());
-        }
-
-        // Check for the correct identifier
-        this.logger_AccessHandler.debug("Checking for correct identifier");
-        for (String id : recordMap.keySet()){
-            if (this.ch.verifyPassword(user+password, id)){
-                this.privateKey = this.ch.processByteArr(Mode.DECRYPT, Base64.getDecoder().decode(recordMap.get(id)), this.ch.hashString_SHA(password), null);
-                break;
-            }
         }
 
         // Check a private key has been found
@@ -95,10 +84,8 @@ public class AccessHandler {
      */
     public boolean createUser(String user, String password) {
         try {
-            // Derive asymmetric key
-            KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-            kpg.initialize(512);
-            KeyPair keyPair = kpg.generateKeyPair();
+            // Get keypair
+            KeyPair keyPair = this.ch.generateKeypair();
 
             // Write private key into JSON file
             Gson gson = new Gson();
@@ -122,7 +109,7 @@ public class AccessHandler {
                     gson.toJson(jsonArray, writer);
                 }
             } catch (Exception e) {
-                this.logger_AccessHandler.error(e.getMessage());
+                this.logger_AccessHandler.error("Error in JSON processing:\n" + e.getMessage());
                 return false;
             }
 
