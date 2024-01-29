@@ -8,22 +8,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.lang.reflect.Type;
-import java.nio.Buffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Scanner;
 
-import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -117,14 +115,35 @@ public class CryptoHandler {
     }
 
     /**
-     * Hashes a password
-     * @param password to hash
+     * Hashes a string
+     * @param string string to hash
      * @return the resulting hash in String form
      */
-    public String processPassword(String password){
-        this.logger_CryptoHandler.debug("Processing password");
+    public String hashString(String string){
+        return this.arg2.encode(string);
+    }
 
-        return this.arg2.encode(password);
+    public byte[] hashString_SHA(String string) throws NoSuchAlgorithmException {
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+        return messageDigest.digest(string.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public byte[] processByteArr(Mode mode, byte[] string, byte[] keyString, byte[] ivString){
+        try {
+            if (ivString == null)
+                ivString = "aaaaaaaaaaaaaaaa".getBytes();
+            IvParameterSpec iv = new IvParameterSpec(ivString);
+            SecretKey key = new SecretKeySpec(keyString, "AES");
+            if (mode == Mode.ENCRYPT){
+                this.cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+            } else if (mode == Mode.DECRYPT){
+                this.cipher.init(Cipher.DECRYPT_MODE, key, iv);
+            }
+            return cipher.doFinal(string);
+        } catch (Exception e){
+            this.logger_CryptoHandler.error(e.getMessage());
+            return null;
+        }
     }
 
     /**
@@ -143,7 +162,6 @@ public class CryptoHandler {
      * 2. Go down tree, keep note of position of each file in comparison to top folder and which dir it belongs to. Repeat until bottom reached.
      * 3. Move all files to be in top dir. Delete all empty dirs
      * 4. Encrypt files, including metadata.json
-     *
      * TO DECRYPT A FOLDER:
      * 1. Decrypt files
      * 2. Create dirs and place files back in original place
@@ -226,7 +244,7 @@ public class CryptoHandler {
                         processFile(Mode.ENCRYPT, file.toString(), keyString, ivString);
                         this.logger_CryptoHandler.debug(Thread.currentThread().getName() + ": Encrypted " + file);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        this.logger_CryptoHandler.error(e.getMessage());
                     }
                 });
             }
@@ -241,9 +259,7 @@ public class CryptoHandler {
             // Decrypt each file
             this.executorService = Executors.newFixedThreadPool(filePaths.size()); // Adjust the pool size as needed
             for (Path file : filePaths) {
-                executorService.submit(() -> {
-                    this.processFile(Mode.DECRYPT, file.toString(), keyString, ivString);
-                });
+                executorService.submit(() -> this.processFile(Mode.DECRYPT, file.toString(), keyString, ivString));
             }
             this.executorService.shutdown();
             this.executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,11 +19,13 @@ public class AccessHandler {
     private final Logger logger_AccessHandler;
     private PasswordHandler ph;
     private CryptoHandler ch;
-    private String privateKey;
+    private byte[] privateKey;
 
     private final String salt = "BTtsI0zG7wFlQdT0";
     private final String jsonPath_publicKey = "publicKeys.json";
-    private final String jsonPath_privateKey = "privateKeys.json";
+    private final String jsonPath_authentication = "authentication.json";
+
+    private String test;
 
     public AccessHandler() throws Exception {
         this.logger_AccessHandler = LoggerFactory.getLogger(AccessHandler.class);
@@ -46,19 +48,18 @@ public class AccessHandler {
         if (!ph.checkLogin(user, password))
             return false;
 
-        // TODO unencrypt privateKeys.json
         // Retrieve private key from JSON
         // Create a HashMap of each identifier and associated private key
         Map<String, String> recordMap = new HashMap<>();
-        try (Reader reader = new FileReader(this.jsonPath_privateKey)){
-            this.logger_AccessHandler.debug("Retrieving privateKeys.json");
+        try (Reader reader = new FileReader(this.jsonPath_authentication)){
+            this.logger_AccessHandler.debug("Retrieving authentication.json");
             Gson gson = new Gson();
             JsonArray jsonArray = gson.fromJson(reader, JsonArray.class);
 
             for (JsonElement element : jsonArray){
                 JsonObject jsonObject = element.getAsJsonObject();
 
-                String id = jsonObject.get("identifier").getAsString();
+                String id = jsonObject.get("authenticationString").getAsString();
                 String privateKey = jsonObject.get("privateKey").getAsString();
 
                 recordMap.put(id, privateKey);
@@ -67,13 +68,11 @@ public class AccessHandler {
             this.logger_AccessHandler.warn(e.getMessage());
         }
 
-        // TODO encrypt privateKeys.json
-
         // Check for the correct identifier
         this.logger_AccessHandler.debug("Checking for correct identifier");
         for (String id : recordMap.keySet()){
-            if (this.ch.verifyPassword(password, id)){
-                this.privateKey = recordMap.get(id);
+            if (this.ch.verifyPassword(user+password, id)){
+                this.privateKey = this.ch.processByteArr(Mode.DECRYPT, Base64.getDecoder().decode(recordMap.get(id)), this.ch.hashString_SHA(password), null);
                 break;
             }
         }
@@ -96,49 +95,35 @@ public class AccessHandler {
      */
     public boolean createUser(String user, String password) {
         try {
-            ph.insertLogin(user, password);
-
             // Derive asymmetric key
             KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
             kpg.initialize(512);
             KeyPair keyPair = kpg.generateKeyPair();
 
-            // Hash password, and use as identifier
-            String identifier = ch.processPassword(password);
-
             // Write private key into JSON file
-            this.logger_AccessHandler.debug("Adding private key to JSON file");
             Gson gson = new Gson();
-            try (Reader reader = new FileReader(jsonPath_privateKey)) {
+            try (Reader reader = new FileReader(jsonPath_authentication)) {
+                // Hash username+password
+                String authenticationString = this.ch.hashString(user+password);
+                // Get private key
+                byte[] privateKey = keyPair.getPrivate().getEncoded();
+                // Encrypt private key
+                byte[] encryptedPrivateKey = this.ch.processByteArr(Mode.ENCRYPT, privateKey, this.ch.hashString_SHA(password), null);
+
+                // JSON processing
                 JsonArray jsonArray = gson.fromJson(reader, JsonArray.class);
 
                 JsonObject newUser = new JsonObject();
-                newUser.addProperty("identifier", identifier);
-                newUser.addProperty("privateKey", Arrays.toString(keyPair.getPrivate().getEncoded()));
+                newUser.addProperty("authenticationString", authenticationString);
+                newUser.addProperty("privateKey", Base64.getEncoder().encodeToString(encryptedPrivateKey));
 
                 jsonArray.add(newUser);
-                try (FileWriter writer = new FileWriter(jsonPath_privateKey)) {
+                try (FileWriter writer = new FileWriter(jsonPath_authentication)) {
                     gson.toJson(jsonArray, writer);
                 }
             } catch (Exception e) {
                 this.logger_AccessHandler.error(e.getMessage());
-            }
-
-            // Write public key into JSON file
-            this.logger_AccessHandler.debug("Adding public key to JSON file");
-            try (Reader reader = new FileReader(jsonPath_publicKey)) {
-                JsonArray jsonArray = gson.fromJson(reader, JsonArray.class);
-
-                JsonObject newUser = new JsonObject();
-                newUser.addProperty("user", user);
-                newUser.addProperty("publicKey", Arrays.toString(keyPair.getPublic().getEncoded()));
-
-                jsonArray.add(newUser);
-                try (FileWriter writer = new FileWriter(jsonPath_publicKey)) {
-                    gson.toJson(jsonArray, writer);
-                }
-            } catch (Exception e) {
-                this.logger_AccessHandler.error(e.getMessage());
+                return false;
             }
 
             this.logger_AccessHandler.info("User {} successfully created", user);

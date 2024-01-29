@@ -1,16 +1,21 @@
 package org.SFM;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class PasswordHandler {
     private static PasswordHandler instance = null;
     private String path;
-    private ArrayList<String> hashes;
+    private HashMap<String, String> recordMap;
     private final CryptoHandler cryptoHandler;
     private final Logger logger_PasswordHandler;
 
@@ -20,17 +25,15 @@ public class PasswordHandler {
      */
     private PasswordHandler() throws Exception {
         this.logger_PasswordHandler = LoggerFactory.getLogger(PasswordHandler.class);
-        this.logger_PasswordHandler.info("PasswordHandler logger instantiated (" + path + ")");
+        this.logger_PasswordHandler.info("PasswordHandler logger instantiated");
 
         try{
-            this.hashes = new ArrayList<>();
+            this.recordMap = new HashMap<>();
             this.cryptoHandler = CryptoHandler.getInstance();
         } catch (Exception e){
             this.logger_PasswordHandler.error(e.getMessage());
             throw new Exception();
         }
-
-        updateHashes();
     }
 
     /**
@@ -49,6 +52,8 @@ public class PasswordHandler {
      */
     public void setPath(String path){
         this.path = path;
+        this.logger_PasswordHandler.info("Set path to " + path);
+        updateHashes();
     }
 
     /**
@@ -58,18 +63,21 @@ public class PasswordHandler {
      */
     public boolean checkLogin(String username, String password){
         this.updateHashes();
-        return this.hashes.parallelStream()
-                .anyMatch(s -> this.cryptoHandler.verifyPassword((username + "/,/" + password), s.strip()));
+        for (String key : this.recordMap.keySet()){
+            if (this.cryptoHandler.verifyPassword(username+password, key))
+                return true;
+        }
+        return false;
     }
 
     /**
      * Appends a password to the file, hashed
      * @param password password to hash and store
      */
-    public void insertLogin(String username, String password) throws IOException {
+    public void insertLogin(String username, String password, String publicKey, String privateKey) throws IOException {
         try{
             String toHash = username + "/,/" + password;
-            String hash = this.cryptoHandler.processPassword(toHash);
+            String hash = this.cryptoHandler.hashString(toHash);
 
             FileWriter writer = new FileWriter(path, true);
 
@@ -87,23 +95,23 @@ public class PasswordHandler {
      */
     private void updateHashes() {
         this.logger_PasswordHandler.info("Updating hashes");
+        try (Reader reader = new FileReader(this.path)){
+            this.logger_PasswordHandler.debug("Retrieving authentication.json");
+            Gson gson = new Gson();
+            JsonArray jsonArray = gson.fromJson(reader, JsonArray.class);
 
-        try{
-            this.hashes = new ArrayList<>();
+            for (JsonElement element : jsonArray){
+                JsonObject jsonObject = element.getAsJsonObject();
 
-            // Get hashes from file
-            File file = new File(path);
-            Scanner reader = new Scanner(file);
+                String id = jsonObject.get("authenticationString").getAsString();
+                String privateKey = jsonObject.get("privateKey").getAsString();
 
-            while(reader.hasNextLine()){
-                String line = reader.nextLine().strip();
-                this.hashes.add(line);
+                recordMap.put(id, privateKey);
             }
-            reader.close();
-        } catch (Exception e){
+            this.logger_PasswordHandler.debug("Updated hashes");
+        } catch (IOException e){
             this.logger_PasswordHandler.error(e.getMessage());
         }
-
     }
 
 }
