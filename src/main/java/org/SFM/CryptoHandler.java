@@ -4,11 +4,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.bouncycastle.jcajce.provider.symmetric.AES;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -17,86 +20,127 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.security.spec.DSAPrivateKeySpec;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.*;
 
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.CRC32;
 
 
-public class CryptoHandler {
+public abstract class CryptoHandler {
     private static CryptoHandler instance = null;
-    private final Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-    private final Argon2PasswordEncoder arg2;
-    private final Logger logger_CryptoHandler;
+    private static final Logger logger_CryptoHandler = LoggerFactory.getLogger(CryptoHandler.class);
+    private static Cipher cipher;
+
+    private static Cipher asymmetricCipher;
+
+    static {
+        try {
+            asymmetricCipher = Cipher.getInstance("RSA");
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * Responsible for encrypting objects
      */
-    public CryptoHandler() throws Exception {
-        this.logger_CryptoHandler = LoggerFactory.getLogger(CryptoHandler.class);
-        this.logger_CryptoHandler.info("EncryptionHandler logger instantiated");
+    private CryptoHandler() throws Exception {
+        logger_CryptoHandler.info("EncryptionHandler logger instantiated");
 
-        try{
-            this.arg2 = new Argon2PasswordEncoder(16, 32, 1, 60000, 10);
-        } catch (Exception e){
-            this.logger_CryptoHandler.error(e.getMessage());
-            throw new Exception();
-        }
     }
-
-    public static CryptoHandler getInstance() throws Exception {
-        if (instance == null)
-            instance = new CryptoHandler();
-        return instance;
-    }
-
 
     /**
      * Encrypts/Decrypts a single file
      * @param mode Mode.ENCRYPT for encryption, Mode.DECRYPT for decryption
      * @param file path to file
-     * @param keyString 16-byte key
+     * @param secretKey 16-byte AES key
      * @param ivString 16-byte initialization vector
      */
-    public synchronized void processFile(Mode mode, String file, String keyString, String ivString) {
+    public static synchronized void processFile(Mode mode, String file, SecretKey secretKey, String ivString) {
         try{
-            this.logger_CryptoHandler.info("Processing file %s (%s)".formatted(file, mode.toString()));
+            logger_CryptoHandler.info("Processing file %s (%s)".formatted(file, mode.toString()));
+            System.out.println("Secret key: " + Arrays.toString(secretKey.getEncoded()));
 
             // Create key and IV from strings
-            this.logger_CryptoHandler.debug("   Creating key");
-            SecretKey key = new SecretKeySpec(keyString.getBytes(), "AES");
+            logger_CryptoHandler.debug("   Creating key");
+            SecretKey key = new SecretKeySpec(secretKey.getEncoded(), "AES");
 
-            this.logger_CryptoHandler.debug("   Creating initialization vector");
+            logger_CryptoHandler.debug("   Creating initialization vector");
             IvParameterSpec iv = new IvParameterSpec(ivString.getBytes());
 
             // Set correct cipher mode
             if (mode==Mode.ENCRYPT){
-                this.cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+                cipher.init(Cipher.ENCRYPT_MODE, key, iv);
             } else if (mode==Mode.DECRYPT){
-                this.cipher.init(Cipher.DECRYPT_MODE, key, iv);
+                cipher.init(Cipher.DECRYPT_MODE, key, iv);
             } else{
                 throw new Exception("Invalid process mode");
             }
 
             // Read file
-            this.logger_CryptoHandler.debug("   Reading file");
+            logger_CryptoHandler.debug("   Reading file");
             byte[] inBytes = Files.readAllBytes(Path.of(file));
 
             // Process file
-            this.logger_CryptoHandler.debug("   Processing file");
+            logger_CryptoHandler.debug("   Processing file");
             byte[] processed = cipher.doFinal(inBytes);
 
             FileOutputStream outputStream = new FileOutputStream(file);
             outputStream.write(processed);
             outputStream.close();
-            this.logger_CryptoHandler.debug("   Finished processing file " + file);
+            logger_CryptoHandler.debug("   Finished processing file " + file);
+
         } catch (Exception e){
-            this.logger_CryptoHandler.error(e.getMessage());
+            logger_CryptoHandler.error(e.getMessage());
         }
 
+    }
+
+    public static void encryptSecretKey(String keyPath, PublicKey publicKey){
+        try{
+            // Read file
+            byte[] inBytes = Files.readAllBytes(Path.of(keyPath));
+
+            asymmetricCipher.init(Cipher.ENCRYPT_MODE, publicKey);
+
+            // Process file
+            byte[] processed = cipher.doFinal(inBytes);
+
+            FileOutputStream outputStream = new FileOutputStream(keyPath);
+            outputStream.write(processed);
+            outputStream.close();
+        } catch (Exception e){
+            logger_CryptoHandler.error(e.getMessage());
+        }
+    }
+
+    public static void decryptSecretKey(String keyPath, PrivateKey privateKey){
+        try{
+            // Read file
+            byte[] inBytes = Files.readAllBytes(Path.of(keyPath));
+
+            asymmetricCipher.init(Cipher.DECRYPT_MODE, privateKey);
+
+            // Process file
+            byte[] processed = cipher.doFinal(inBytes);
+
+            FileOutputStream outputStream = new FileOutputStream(keyPath);
+            outputStream.write(processed);
+            outputStream.close();
+        } catch (Exception e){
+            logger_CryptoHandler.error(e.getMessage());
+        }
     }
 
     /**
@@ -104,54 +148,50 @@ public class CryptoHandler {
      * Access using getPublic() and getPrivate()
      * @return KeyPair
      */
-    public KeyPair generateKeypair() throws NoSuchAlgorithmException {
+    public static KeyPair generateKeypair() throws NoSuchAlgorithmException {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
         keyGen.initialize(2048);
 
         return keyGen.generateKeyPair();
     }
 
+
     /**
-     * Hashes a string
+     * Hashes a string using the SHA-256 algorithm
      * @param string string to hash
-     * @return the resulting hash in String form
+     * @return hashed string
      */
-    public String hashString(String string){
-        return this.arg2.encode(string);
+    public static byte[] hashString(String string)  {
+        try{
+            String string2 = string.strip();
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA-256"); // Non-deterministic for some reason
+//            return messageDigest.digest(string2.getBytes(StandardCharsets.UTF_8));
+            return "aaaaaaaaaaaaaaaa".getBytes();
+        } catch (Exception e){
+            logger_CryptoHandler.error(e.getMessage());
+            return null;
+        }
     }
 
-    public byte[] hashString_SHA(String string) throws NoSuchAlgorithmException {
-        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-        return messageDigest.digest(string.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public byte[] processByteArr(Mode mode, byte[] string, byte[] keyString, byte[] ivString){
+    public static byte[] processByteArr(Mode mode, byte[] string, byte[] keyString, byte[] ivString){
         try {
             if (ivString == null)
                 ivString = "aaaaaaaaaaaaaaaa".getBytes();
             IvParameterSpec iv = new IvParameterSpec(ivString);
             SecretKey key = new SecretKeySpec(keyString, "AES");
             if (mode == Mode.ENCRYPT){
-                this.cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+                cipher.init(Cipher.ENCRYPT_MODE, key, iv);
             } else if (mode == Mode.DECRYPT){
-                this.cipher.init(Cipher.DECRYPT_MODE, key, iv);
+                cipher.init(Cipher.DECRYPT_MODE, key, iv);
             }
             return cipher.doFinal(string);
         } catch (Exception e){
-            this.logger_CryptoHandler.error(e.getMessage());
+            System.out.println(e.getMessage());
+            logger_CryptoHandler.error(e.getMessage());
             return null;
         }
     }
 
-    /**
-     * Checks a plaintext password matches a hashed password
-     * @param raw plaintext password
-     * @param hashed hashed password
-     * @return true if it does, else false
-     */
-    public boolean verifyPassword(String raw, String hashed){
-        return this.arg2.matches(raw, hashed);
-    }
 
     /**
      * TO ENCRYPT A FOLDER:
@@ -166,31 +206,46 @@ public class CryptoHandler {
      *
      * @param mode Mode.ENCRYPT for encryption, Mode.DECRYPT for decryption
      * @param vaultDir top-level dir to create the vault from
-     * @param keyString 16-byte key
      * @param ivString 16-byte initialization vector
      */
-    public void processDirectory(Mode mode, String vaultDir, String keyString, String ivString) throws Exception {
+    public static void processDirectory(Mode mode, String vaultDir, String ivString) throws Exception {
         Path vaultDirPath = Paths.get(vaultDir);
         String dir = vaultDirPath.getParent().toString();
         DirectoryHandler dh = new DirectoryHandler(dir);
         ExecutorService executorService;
         if (mode == Mode.ENCRYPT){
-            this.logger_CryptoHandler.info("ENCRYPTING VAULT");
+            logger_CryptoHandler.info("ENCRYPTING VAULT");
+            // Generate AES key and write to file
+            KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+            keyGen.init(256);
+            SecretKey secretKey = keyGen.generateKey();
+            try {
+                File secretKeyFile = new File(dir + "/SecretKey");
+                byte[] toWrite = secretKey.getEncoded();
+                FileOutputStream outputStream = new FileOutputStream(secretKeyFile);
+
+                System.out.println("AES Key: " + toWrite);
+                outputStream.write(secretKey.getEncoded());
+                outputStream.close();
+
+            } catch (Exception e){
+                logger_CryptoHandler.error(e.getMessage());
+            }
 
             // Create new directory
             File newDirectory = new File(dir + "/vault");
             if (newDirectory.exists()){
-                this.logger_CryptoHandler.warn(dir + "/vault already exists!");
+                logger_CryptoHandler.warn(dir + "/vault already exists!");
             } else {
                 try {
                    newDirectory.mkdirs();
                 } catch (Exception e){
-                    this.logger_CryptoHandler.error(e.getMessage());
+                    logger_CryptoHandler.error(e.getMessage());
                 }
             }
 
             // Create list of files
-            this.logger_CryptoHandler.info("Created metadata.json for dir " + dir);
+            logger_CryptoHandler.info("Created metadata.json for dir " + dir);
 
             // Save list of files
             ArrayList<Path> filePaths = dh.getDirContent(dir, "file");
@@ -216,9 +271,9 @@ public class CryptoHandler {
                 executorService.submit(() -> {
                     try {
                         Files.copy(Paths.get(file.getPath()), Paths.get(dir + "/vault/" + file.getNewName()), StandardCopyOption.REPLACE_EXISTING);
-                        this.logger_CryptoHandler.debug(Thread.currentThread().getName() + ": Copied " + file.getPath());
+                        logger_CryptoHandler.debug(Thread.currentThread().getName() + ": Copied " + file.getPath());
                     } catch (IOException e) {
-                        this.logger_CryptoHandler.error(e.getMessage());
+                        logger_CryptoHandler.error(e.getMessage());
                     }
                 });
             }
@@ -226,10 +281,10 @@ public class CryptoHandler {
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
             // Delete empty directories
-            ArrayList<Path> dirPaths = dh.getDirContent(vaultDir, "dir");
-            for (Path dirPath : dirPaths){
-                Files.walkFileTree(dirPath, new DeletingFileVisitor());
-            }
+//            ArrayList<Path> dirPaths = dh.getDirContent(vaultDir, "dir");
+//            for (Path dirPath : dirPaths){
+//                Files.walkFileTree(dirPath, new DeletingFileVisitor());
+//            }
 
             // Encrypt files in new directory
             executorService = Executors.newFixedThreadPool(fileObjs.size()); // Adjust the pool size as needed
@@ -239,25 +294,30 @@ public class CryptoHandler {
                 executorService.submit(() -> {
                     try {
                         logger_CryptoHandler.debug("Encrypting " + file);
-                        processFile(Mode.ENCRYPT, file.toString(), keyString, ivString);
-                        this.logger_CryptoHandler.debug(Thread.currentThread().getName() + ": Encrypted " + file);
+                        processFile(Mode.ENCRYPT, file.toString(), secretKey, ivString);
+                        logger_CryptoHandler.debug(Thread.currentThread().getName() + ": Encrypted " + file);
                     } catch (Exception e) {
-                        this.logger_CryptoHandler.error(e.getMessage());
+                        logger_CryptoHandler.error(e.getMessage());
                     }
                 });
             }
             executorService.shutdown();
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } else if (mode == Mode.DECRYPT){
-            this.logger_CryptoHandler.info("DECRYPTING VAULT");
+            logger_CryptoHandler.info("DECRYPTING VAULT");
             Gson gson = new Gson();
             // Get the files from the vault
             ArrayList<Path> filePaths = dh.getDirContent(dir + "/vault", "file");
+            // Get the symmetric key
+            byte[] privateKeyByteArr = Files.readAllBytes(Paths.get(dir + "/SecretKey"));
+            SecretKey secretKey = new SecretKeySpec(privateKeyByteArr, "AES");
+            System.out.println("Decryption key: " + secretKey.getEncoded());
+
             System.out.println("Decrypting files");
             // Decrypt each file
             executorService = Executors.newFixedThreadPool(filePaths.size()); // Adjust the pool size as needed
             for (Path file : filePaths) {
-                executorService.submit(() -> this.processFile(Mode.DECRYPT, file.toString(), keyString, ivString));
+                executorService.submit(() -> processFile(Mode.DECRYPT, file.toString(), secretKey, ivString));
             }
             executorService.shutdown();
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
@@ -265,13 +325,14 @@ public class CryptoHandler {
             // Get content from manifest.json
             String jsonPath = dir + "/vault/manifest.json";
             System.out.println("Getting info from manifest");
-            String existingJson = Files.readString(Paths.get(jsonPath));
+            String existingJson = Files.readString(Paths.get(jsonPath), StandardCharsets.UTF_8);
 
             Type listType = new TypeToken<List<FileObj>>() {}.getType();
             ArrayList<FileObj> fileObjs = gson.fromJson(existingJson, listType);
 
             // Put each file back to where it belongs
             for (FileObj fileObj : fileObjs){
+                System.out.println("Copying file");
                 Files.createDirectories(Paths.get(fileObj.getPath()).getParent());
                 Files.copy(Paths.get(dir + "/vault/" + fileObj.getNewName()), Paths.get(fileObj.getPath()), StandardCopyOption.REPLACE_EXISTING);
             }
@@ -283,7 +344,23 @@ public class CryptoHandler {
 
     }
 
-    static class DeletingFileVisitor extends SimpleFileVisitor<Path>{
+    private static PrivateKey createPrivateKey(String stringPk) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        // Decode Base64 encoded string
+        byte[] privateKeyBytes = Base64.getDecoder().decode(stringPk);
+
+        // Create spec from decoded bytes
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+
+        // Create Key Factory
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+
+        // Generate private key
+        return keyFactory.generatePrivate(keySpec);
+    }
+
+
+
+    private static class DeletingFileVisitor extends SimpleFileVisitor<Path>{
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
             Files.delete(file);

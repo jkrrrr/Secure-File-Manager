@@ -28,12 +28,16 @@ public class DirectoryHandler {
         this.logger_DirectoryHandler = LoggerFactory.getLogger(DirectoryHandler.class);
         logger_DirectoryHandler.info("DirectoryHandler logger instantiated");
 
-        this.numOfFiles = 0;
-        this.numOfDirs = 0;
-        this.currentDirPath = fileString;
-        this.currentDir = this.fsManager.resolveFile(this.currentDirPath).getChildren();
+        try {
+            this.numOfFiles = 0;
+            this.numOfDirs = 0;
+            this.currentDirPath = fileString;
+            this.currentDir = this.fsManager.resolveFile(this.currentDirPath).getChildren();
 
-        updateTree();
+            updateTree();
+        } catch (Exception e){
+            this.logger_DirectoryHandler.error(e.getMessage());
+        }
     }
 
     /**

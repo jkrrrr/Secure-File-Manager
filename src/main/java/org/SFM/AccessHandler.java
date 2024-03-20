@@ -6,49 +6,91 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
 import java.io.*;
-import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.*;
 
 
 public class AccessHandler {
+    private static AccessHandler instance = null;
+    private final Argon2PasswordEncoder arg2;
     private final Logger logger_AccessHandler;
-    private final PasswordHandler ph;
-    private final CryptoHandler ch;
-    private byte[] privateKey;
+    private KeyPair keyPair;
 
     private final String jsonPath_authentication = "authentication.json";
     private final String jsonPath_publicKeys = "publicKeys.json";
-
+    private String path;
+    private final HashMap<String, String> recordMap;
 
     /**
      * Responsible for authenticating user and creating new accounts
      * @throws Exception singleton error
      */
-    public AccessHandler() throws Exception {
+    private AccessHandler() throws Exception {
         this.logger_AccessHandler = LoggerFactory.getLogger(AccessHandler.class);
-        this.ph = PasswordHandler.getInstance();
-        this.ch = CryptoHandler.getInstance();
+        
+        try{
+            this.arg2 = new Argon2PasswordEncoder(16, 32, 1, 60000, 10);
+        } catch (Exception e){
+            this.logger_AccessHandler.error(e.getMessage());
+            throw new Exception();
+        }
+        
+        try{
+            this.recordMap = new HashMap<>();
+        } catch (Exception e){
+            this.logger_AccessHandler.error(e.getMessage());
+            throw new Exception();
+        }
+    }
+
+    public static synchronized AccessHandler getInstance() throws Exception {
+        if (instance == null)
+            instance = new AccessHandler();
+        return instance;
     }
 
     /**
-     * Authenticates a user into the system, then sets their private key
-     * @param user username
-     * @param password password
-     * @return true if the username and password are correct, otherwise false
-     * @throws Exception could not find a private key for the user
+     * Used for debugging - deletes all authentication data
      */
-    public boolean authenticate(String user, String password) throws Exception {
-        this.logger_AccessHandler.info("Authenticating user " + user);
-        // Check correct details
-        if (!ph.checkLogin(user, password))
-            return false;
+    public void reset(){
+        String[] filePaths = {"authentication.json", "publicKeys.json", "logs/recent.log"};
+        for (String filePath : filePaths) {
+            try (FileWriter writer = new FileWriter(filePath)) {
+                if (filePath.endsWith(".json")) {
+                    writer.write("[]"); // Write an empty array to JSON files
+                } else {
+                    writer.write(""); // Write an empty string to other files
+                }
+            } catch (Exception e){
+                this.logger_AccessHandler.error(e.getMessage());
+            }
+        }
+    }
 
-        // Retrieve private key from JSON
-        // Create a HashMap of each identifier and associated private key
-        try (Reader reader = new FileReader(this.jsonPath_authentication)){
+    /**
+     * Sets the path of the password file
+     * @param path path of the password file
+     */
+    public void setPath(String path){
+        this.path = path;
+        this.logger_AccessHandler.info("Set path to " + path);
+        updateHashes();
+    }
+
+    /**
+     * Refreshes the class' list of passwords based on the ones in the file
+     */
+    private void updateHashes() {
+        this.logger_AccessHandler.info("Updating hashes");
+        try (Reader reader = new FileReader(this.path)){
             this.logger_AccessHandler.debug("Retrieving authentication.json");
             Gson gson = new Gson();
             JsonArray jsonArray = gson.fromJson(reader, JsonArray.class);
@@ -59,17 +101,113 @@ public class AccessHandler {
                 String id = jsonObject.get("authenticationString").getAsString();
                 String privateKey = jsonObject.get("privateKey").getAsString();
 
-                if (this.ch.verifyPassword(user+password, id)){
-                    this.privateKey = this.ch.processByteArr(Mode.DECRYPT, Base64.getDecoder().decode(privateKey), this.ch.hashString_SHA(password), null);
+                recordMap.put(id, privateKey);
+            }
+            this.logger_AccessHandler.debug("Updated hashes");
+        } catch (Exception e){
+            this.logger_AccessHandler.error(e.getMessage());
+        }
+    }
+    
+    /**
+     * Checks to see if the given password is contained within the password file
+     * @param password password to check
+     * @return true if in password file, otherwise false
+     */
+    public boolean checkLogin(String username, String password){
+        this.updateHashes();
+        try{
+            for (String key : this.recordMap.keySet()){
+                if (this.verifyPassword(username+password, key))
+                    return true;
+            }
+        } catch (Exception e){
+            this.logger_AccessHandler.error(e.getMessage());
+        }
+        return false;
+    }
+    
+    /**
+     * Authenticates a user into the system, then sets their private key
+     * @param user username
+     * @param password password
+     * @return true if the username and password are correct, otherwise false
+     * @throws Exception could not find a private key for the user
+     */
+    public boolean authenticate(String user, String password) throws Exception {
+        this.logger_AccessHandler.info("Authenticating user " + user);
+        // Check correct details
+        if (!this.checkLogin(user, password))
+            return false;
+
+        // Retrieve private key from JSON
+        // Create a HashMap of each identifier and associated private key
+        String username = null;
+        Gson gson = new Gson();
+        String id = null;
+        String privateKey = null;
+        boolean validLogin = false;
+        try (Reader reader = new FileReader(this.jsonPath_authentication)){
+            this.logger_AccessHandler.debug("Retrieving authentication.json");
+            JsonArray jsonArray_authentication = gson.fromJson(reader, JsonArray.class);
+
+            for (JsonElement element : jsonArray_authentication){
+                JsonObject jsonObject_authentication = element.getAsJsonObject();
+
+                id = jsonObject_authentication.get("authenticationString").getAsString();
+                privateKey = jsonObject_authentication.get("privateKey").getAsString();
+
+                if (this.verifyPassword(user+password, id)){
+                    this.logger_AccessHandler.info("Verified password");
+                    validLogin = true;
+                    break;
+                    }
+                }
+            }
+
+        if (!validLogin)
+            return false;
+
+        try (Reader reader2 = new FileReader(this.jsonPath_publicKeys)){
+            JsonArray jsonArray_publicKeys = gson.fromJson(reader2, JsonArray.class);
+
+            for (JsonElement usernamePair : jsonArray_publicKeys){
+                username = usernamePair.getAsJsonObject().get("user").getAsString();
+                if (username.matches(user)){
+                    System.out.println("Match found");
+                    KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                    String publicKeyString = usernamePair.getAsJsonObject().get("publicKey").getAsString();
+                    X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyString));
+
+                    System.out.println("Generating public key:\n");
+                    // Generate PublicKey from its bytes
+                    PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+
+                    System.out.println("Generating private key:\n");
+                    // Generate PrivateKey from its bytes
+                    PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(CryptoHandler.processByteArr(Mode.DECRYPT, Base64.getDecoder().decode(privateKey), CryptoHandler.hashString(password), null));
+                    PrivateKey privateKeyNew = keyFactory.generatePrivate(privateKeySpec);
+
+                    System.out.println("Creating keypair");
+                    System.out.println(publicKey.getAlgorithm());
+                    System.out.println(privateKeyNew.getAlgorithm());
+                    // Create KeyPair
+                    this.keyPair = new KeyPair(publicKey, privateKeyNew);
+
+                    System.out.println("RETRIEVED Private key: " + this.keyPair.getPrivate().getEncoded());
+                    System.out.println("RETRIEVED Public key: " + this.keyPair.getPublic().getEncoded());
+                    System.out.println("Password assigned");
+                    this.logger_AccessHandler.info("Password assigned");
                     break;
                 }
             }
         } catch (IOException e){
+            System.out.println(e.getMessage());
             this.logger_AccessHandler.warn(e.getMessage());
         }
 
         // Check a private key has been found
-        if (this.privateKey == null){
+        if (this.keyPair.getPrivate() == null){
             this.logger_AccessHandler.error("Could not find private key for user " + user);
             throw(new Exception("Could not find private key for user " + user));
         }
@@ -87,17 +225,19 @@ public class AccessHandler {
     public boolean createUser(String user, String password) {
         try {
             // Get keypair
-            KeyPair keyPair = this.ch.generateKeypair();
+            KeyPair keyPair = CryptoHandler.generateKeypair();
+            System.out.println("GENERATE Private key: " + keyPair.getPrivate().getEncoded());
+            System.out.println("GENERATE Public key: " + keyPair.getPublic().getEncoded());
 
             // Write private key into JSON file
             Gson gson = new Gson();
             try (Reader reader = new FileReader(jsonPath_authentication)) {
                 // Hash username+password
-                String authenticationString = this.ch.hashString(user + password);
+                String authenticationString = this.kdf(user + password);
                 // Get private key
                 byte[] privateKey = keyPair.getPrivate().getEncoded();
                 // Encrypt private key
-                byte[] encryptedPrivateKey = this.ch.processByteArr(Mode.ENCRYPT, privateKey, this.ch.hashString_SHA(password), null);
+                byte[] encryptedPrivateKey = CryptoHandler.processByteArr(Mode.ENCRYPT, privateKey, CryptoHandler.hashString(password), null);
 
                 // JSON processing
                 JsonArray jsonArray = gson.fromJson(reader, JsonArray.class);
@@ -105,12 +245,17 @@ public class AccessHandler {
                 JsonObject newUser = new JsonObject();
                 newUser.addProperty("authenticationString", authenticationString);
                 newUser.addProperty("privateKey", Base64.getEncoder().encodeToString(encryptedPrivateKey));
+//                newUser.addProperty("privateKey", Arrays.toString(encryptedPrivateKey));
 
                 jsonArray.add(newUser);
                 try (FileWriter writer = new FileWriter(jsonPath_authentication)) {
                     gson.toJson(jsonArray, writer);
+                } catch (Exception e){
+                    System.out.println("Writing error (private key): " + e.getMessage());
+                    this.logger_AccessHandler.error("Writing error (private key): " + e.getMessage());
                 }
             } catch (Exception e) {
+                System.out.println("Error in JSON processing: " + Arrays.toString(e.getStackTrace()));
                 this.logger_AccessHandler.error("Error in JSON processing:\n" + e.getMessage());
                 return false;
             }
@@ -122,24 +267,103 @@ public class AccessHandler {
                 JsonObject newUser = new JsonObject();
                 newUser.addProperty("user", user);
                 newUser.addProperty("publicKey", Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()));
+//                newUser.addProperty("publicKey", Arrays.toString(keyPair.getPublic().getEncoded()));
 
                 jsonArray.add(newUser);
                 try (FileWriter writer = new FileWriter(jsonPath_publicKeys)) {
                     gson.toJson(jsonArray, writer);
+                } catch (Exception e){
+                    System.out.println("Writing error (public key): " + e.getMessage());
+                    this.logger_AccessHandler.error("Writing error (public key): " + e.getMessage());
                 }
                 this.logger_AccessHandler.info("User {} successfully created", user);
                 return true;
 
             } catch (Exception e) {
+                System.out.println("1: " + e.getMessage());
                 this.logger_AccessHandler.error(e.getMessage());
                 return false;
             }
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            System.out.println("2: " + e.getMessage());
+            this.logger_AccessHandler.error(e.getMessage());
+            return false;
         }
     }
 
-        // Encrypt symmetric key with a user's asymmetric key
+    /**
+     * Applies the Argon2 KDF
+     * @param string string to hash
+     * @return the resulting hash in String form
+     */
+    public String kdf(String string){
+        return this.arg2.encode(string);
+    }
+
+    /**
+     * Checks a plaintext password matches a hashed password
+     * @param raw plaintext password
+     * @param hashed hashed password
+     * @return true if it does, else false
+     */
+    public boolean verifyPassword(String raw, String hashed){
+        return this.arg2.matches(raw, hashed);
+    }
+    
+    public PrivateKey getPrivateKey() {
+        return this.keyPair.getPrivate();
+    }
+
+    public PublicKey getPublicKey(){
+        return this.keyPair.getPublic();
+    }
 
 
+    /**
+     * Creates a digital signature from a string
+     * @param input input bytes
+     * @param privateKey private key to sign with
+     * @return output signature as an array of bytes
+     */
+    public void sign(String filePath) throws IOException {
+        try {
+            // Prepare signature file
+            File sigFile = new File("signature.sig");
+            FileOutputStream fileOutputStream = new FileOutputStream(sigFile);
+
+            // Read filePath file
+            byte[] toSign = Files.readAllBytes(Paths.get(filePath));
+
+            // Generate signature
+            Signature sig = Signature.getInstance("SHA256withRSA");
+            sig.initSign(this.keyPair.getPrivate());
+            sig.update(toSign);
+            byte[] sigFinal = sig.sign();
+
+            fileOutputStream.write(sigFinal);
+            fileOutputStream.close();
+            this.logger_AccessHandler.info("Created signature");
+        } catch (Exception e){
+            logger_AccessHandler.error(e.getMessage());
+        }
+    }
+    
+    /**
+     * Verfies a digital signature
+     * @param string document the signature is verifying
+     * @param signature signature to verify
+     * @param publicKey public key of the sender
+     * @return true if the signature is verified, false otherwise
+     */
+    public boolean verify(String string, byte[] signature, PublicKey publicKey){
+        try {
+            Signature sig = Signature.getInstance("SHA256withRSA");
+            sig.initVerify(publicKey);
+            sig.update(string.getBytes());
+            return sig.verify(signature);
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            this.logger_AccessHandler.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
 }
