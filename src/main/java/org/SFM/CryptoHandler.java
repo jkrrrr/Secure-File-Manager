@@ -33,11 +33,11 @@ import java.util.zip.CRC32;
 
 
 public abstract class CryptoHandler {
-    private static CryptoHandler instance = null;
+    private static final CryptoHandler instance = null;
     private static final Logger logger_CryptoHandler = LoggerFactory.getLogger(CryptoHandler.class);
-    private static Cipher cipher;
+    private static final Cipher cipher;
 
-    private static Cipher asymmetricCipher;
+    private static final Cipher asymmetricCipher;
 
     static {
         try {
@@ -109,13 +109,14 @@ public abstract class CryptoHandler {
 
     public static void encryptSecretKey(String keyPath, PublicKey publicKey){
         try{
+            logger_CryptoHandler.debug("Encrypting secret key");
             // Read file
             byte[] inBytes = Files.readAllBytes(Path.of(keyPath));
 
             asymmetricCipher.init(Cipher.ENCRYPT_MODE, publicKey);
 
             // Process file
-            byte[] processed = cipher.doFinal(inBytes);
+            byte[] processed = asymmetricCipher.doFinal(inBytes);
 
             FileOutputStream outputStream = new FileOutputStream(keyPath);
             outputStream.write(processed);

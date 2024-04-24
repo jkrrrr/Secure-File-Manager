@@ -339,12 +339,13 @@ public class AccessHandler {
             sig.initSign(this.keyPair.getPrivate());
             sig.update(toSign);
             byte[] sigFinal = sig.sign();
+            System.out.println("Signature: " + Arrays.toString(sigFinal));
 
             fileOutputStream.write(sigFinal);
             fileOutputStream.close();
             this.logger_AccessHandler.info("Created signature");
         } catch (Exception e){
-            logger_AccessHandler.error(e.getMessage());
+            logger_AccessHandler.error(e.getLocalizedMessage());
         }
     }
     
