@@ -231,7 +231,7 @@ public abstract class CryptoHandler {
             logger_CryptoHandler.info("Created metadata.json for dir " + dir);
 
             // Save list of files
-            ArrayList<Path> filePaths = dh.getDirContent(dir, "file");
+            ArrayList<Path> filePaths = dh.getDirContent(vaultDir, "file");
             ArrayList<FileObj> fileObjs = new ArrayList<>();
             for (Path file : filePaths){
                 String newName = RandomStringUtils.random(10, true, true);
@@ -272,12 +272,13 @@ public abstract class CryptoHandler {
             // Encrypt files in new directory
             executorService = Executors.newFixedThreadPool(fileObjs.size()); // Adjust the pool size as needed
             filePaths = dh.getDirContent((dir + "/vault"), "file");
+
             System.out.println("Encrypting files");
             for (Path file : filePaths) {
                 executorService.submit(() -> {
                     try {
                         logger_CryptoHandler.debug("Encrypting " + file);
-                        processFile(Mode.ENCRYPT, file.toString(), secretKey, ivString);
+//                        processFile(Mode.ENCRYPT, file.toString(), secretKey, ivString);
                         logger_CryptoHandler.debug(Thread.currentThread().getName() + ": Encrypted " + file);
                     } catch (Exception e) {
                         logger_CryptoHandler.error(e.getMessage());
@@ -293,7 +294,6 @@ public abstract class CryptoHandler {
             ArrayList<Path> filePaths = dh.getDirContent(dir + "/vault", "file");
             // Get the symmetric key
             byte[] privateKeyByteArr = Files.readAllBytes(Paths.get(dir + "/SecretKey"));
-            System.out.println(privateKeyByteArr);
             SecretKey secretKey = new SecretKeySpec(privateKeyByteArr, "AES");
 
             System.out.println("Decrypting files");
