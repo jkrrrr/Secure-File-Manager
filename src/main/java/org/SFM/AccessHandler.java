@@ -383,17 +383,22 @@ public class AccessHandler {
      * @param user username of the sender
      * @return true if the signature is verified, false otherwise
      */
-    public boolean verify(String filePath, String sigPath, String user) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        byte[] sig = Files.readAllBytes(Paths.get(sigPath));
-        byte[] data = Files.readAllBytes(Paths.get(filePath));
+    public boolean verify(String filePath, String sigPath, String user){
+        try {
+            byte[] sig = Files.readAllBytes(Paths.get(sigPath));
+            byte[] data = Files.readAllBytes(Paths.get(filePath));
 
-        String userPublicKeyString = this.publicKeys.get(user);
-        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(userPublicKeyString));
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        PublicKey publicKey = kf.generatePublic(keySpec);
+            String userPublicKeyString = this.publicKeys.get(user);
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(userPublicKeyString));
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            PublicKey publicKey = kf.generatePublic(keySpec);
 
-        this.sig.initVerify(publicKey);
-        this.sig.update(data);
-        return this.sig.verify(sig);
+            this.sig.initVerify(publicKey);
+            this.sig.update(data);
+            return this.sig.verify(sig);
+        } catch (Exception e){
+            this.logger_AccessHandler.error(e.getMessage());
+        }
+        return false;
     }
 }
