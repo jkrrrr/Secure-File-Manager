@@ -6,17 +6,15 @@ import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
-import com.googlecode.lanterna.screen.Screen;
-import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
-import org.apache.commons.vfs2.*;
+import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class Printer {
     private static Printer instance = null;
@@ -30,16 +28,18 @@ public class Printer {
     private final char pointer;
     private int rows;
     private int columns;
+    private final AccessHandler ah;
 
 
     /**
      * Responsible for graphics printing
      */
-    private Printer(DirectoryHandler dh){
+    private Printer(DirectoryHandler dh) throws Exception {
         this.logger_Printer = LoggerFactory.getLogger(Printer.class);
         logger_Printer.info("Printer logger instantiated");
         
         this.dh = dh;
+        this.ah = AccessHandler.getInstance();
         this.currentHighlight = 0;
         this.dirToPrint = new ArrayList<>();
 
@@ -83,9 +83,9 @@ public class Printer {
                     this.rows = terminalSize.getRows();
                     this.columns = terminalSize.getColumns();
 
-                    this.textGraphics.drawLine(5, 3, newSize.getColumns() - 1, 3, ' ');
-                    this.textGraphics.putString(5, 3, "Terminal Size: ", SGR.BOLD);
-                    this.textGraphics.putString(5 + "Terminal Size: ".length(), 3, newSize.toString());
+//                    this.textGraphics.drawLine(5, 3, newSize.getColumns() - 1, 3, ' ');
+//                    this.textGraphics.putString(5, 3, "Terminal Size: ", SGR.BOLD);
+//                    this.textGraphics.putString(5 + "Terminal Size: ".length(), 3, newSize.toString());
 
                     this.display_controls();
 
@@ -96,14 +96,59 @@ public class Printer {
 
             });
 
+            // Authenticate
+            // Username
+            StringBuilder currentlyTypedUsername = new StringBuilder();
+            textGraphics.putString(5, 2, "Username: " + currentlyTypedUsername);
+            textGraphics.putString(5, 3, "Password: ");
+            this.terminal.flush();
+
+            KeyStroke keyStroke = this.terminal.readInput();
+            this.logger_Printer.info("Entering authentication username loop");
+            while (keyStroke.getKeyType() != KeyType.Enter){
+                if (keyStroke.getCharacter() == '\b'){
+                    currentlyTypedUsername.setLength(Math.max(currentlyTypedUsername.length() - 1, 0));
+                } else {
+                    currentlyTypedUsername.append(keyStroke.getCharacter());
+                }
+
+                // TODO Clear screen before doing backspace
+                this.terminal.flush();
+                textGraphics.putString(5, 2, "Username: " + currentlyTypedUsername);
+                textGraphics.putString(5, 3, "Password: ");
+                this.terminal.flush();
+
+                keyStroke = this.terminal.readInput();
+            }
+
+            // Password
+            StringBuilder currentlyTypedPassword = new StringBuilder();
+            keyStroke = this.terminal.readInput();
+            this.logger_Printer.info("Entering authentication password loop");
+            while (keyStroke.getKeyType() != KeyType.Enter){
+
+                this.terminal.flush();
+                currentlyTypedPassword.append(keyStroke.getCharacter());
+                textGraphics.putString(5, 3, "Password: " + (currentlyTypedPassword));
+                this.terminal.flush();
+
+                keyStroke = this.terminal.readInput();
+            }
+
+            if (!this.ah.authenticate(currentlyTypedUsername.toString(), currentlyTypedPassword.toString())){
+                this.logger_Printer.info("Authentication failed");
+                System.exit(0);
+            }
+            this.logger_Printer.info("Authentication complete");
+
             this.display_directory();
 
             this.logger_Printer.debug("   Reading key input");
             // Read key input
-            KeyStroke keyStroke = this.terminal.readInput();
+            keyStroke = this.terminal.readInput();
 
             while (keyStroke.getKeyType() != KeyType.Escape) {
-                logger_Printer.debug("Inside main loop");
+                this.logger_Printer.debug("Inside directory browser loop");
 
                 // Print current directory
                 this.dirToPrint = new ArrayList<>(this.getDirContent());
@@ -163,7 +208,7 @@ public class Printer {
     /**
      * Singleton checking
      */
-    public static Printer getInstance(DirectoryHandler dh){
+    public static Printer getInstance(DirectoryHandler dh) throws Exception {
         if (instance == null)
             instance = new Printer(dh);
         return instance;

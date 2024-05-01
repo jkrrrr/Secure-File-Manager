@@ -1,14 +1,11 @@
 package org.SFM;
 
-import com.fasterxml.jackson.databind.ser.Serializers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.bouncycastle.jcajce.provider.symmetric.AES;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -16,25 +13,23 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.security.*;
-import java.security.spec.DSAPrivateKeySpec;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.*;
-
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.CRC32;
 
 
 public abstract class CryptoHandler {
-    private static final CryptoHandler instance = null;
     private static final Logger logger_CryptoHandler = LoggerFactory.getLogger(CryptoHandler.class);
     private static final Cipher cipher;
 
@@ -56,9 +51,8 @@ public abstract class CryptoHandler {
     /**
      * Responsible for encrypting objects
      */
-    private CryptoHandler() throws Exception {
-        logger_CryptoHandler.info("EncryptionHandler logger instantiated");
-
+    private CryptoHandler(){
+        logger_CryptoHandler.info("CryptoHandler object instantiated");
     }
 
     /**
@@ -155,8 +149,7 @@ public abstract class CryptoHandler {
         try{
             String string2 = string.strip();
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-256"); // Non-deterministic for some reason
-//            return messageDigest.digest(string2.getBytes(StandardCharsets.UTF_8));
-            return "aaaaaaaaaaaaaaaa".getBytes();
+            return messageDigest.digest(string2.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e){
             logger_CryptoHandler.error(e.getMessage());
             return null;
@@ -326,22 +319,6 @@ public abstract class CryptoHandler {
         }
 
     }
-
-    private static PrivateKey createPrivateKey(String stringPk) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        // Decode Base64 encoded string
-        byte[] privateKeyBytes = Base64.getDecoder().decode(stringPk);
-
-        // Create spec from decoded bytes
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
-
-        // Create Key Factory
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-
-        // Generate private key
-        return keyFactory.generatePrivate(keySpec);
-    }
-
-
 
     private static class DeletingFileVisitor extends SimpleFileVisitor<Path>{
         @Override

@@ -4,20 +4,19 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import org.bouncycastle.jcajce.provider.asymmetric.X509;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.*;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
 
 
 public class AccessHandler {
@@ -340,17 +339,12 @@ public class AccessHandler {
         return this.keyPair.getPrivate();
     }
 
-    public PublicKey getPublicKey(){
-        return this.keyPair.getPublic();
-    }
-
-
     /**
      * Creates a digital signature from a string
      * @param filePath path of file to sign
      * @param sigPath signature output path
      */
-    public void sign(String filePath, String sigPath) throws IOException {
+    public void sign(String filePath, String sigPath){
         try {
             // Read filePath file
             byte[] toSign = Files.readAllBytes(Paths.get(filePath));
