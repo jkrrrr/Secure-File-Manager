@@ -31,7 +31,7 @@ public class AccessHandler {
     private final String jsonPath_publicKeys = "publicKeys.json";
     private String path;
     private final HashMap<String, String> recordMap;
-    private final HashMap<String, String> publicKeys;
+    public final HashMap<String, PublicKey> publicKeys;
 
     /**
      * Responsible for authenticating user and creating new accounts
@@ -73,7 +73,11 @@ public class AccessHandler {
                 JsonObject jsonObject = element.getAsJsonObject();
 
                 String user = jsonObject.get("user").getAsString();
-                String publicKey = jsonObject.get("publicKey").getAsString();
+                String publicKeyString = jsonObject.get("publicKey").getAsString();
+
+                X509EncodedKeySpec keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyString));
+                KeyFactory kf = KeyFactory.getInstance("RSA");
+                PublicKey publicKey = kf.generatePublic(keySpec);
 
                 this.publicKeys.put(user, publicKey);
             }
@@ -211,24 +215,16 @@ public class AccessHandler {
                     String publicKeyString = usernamePair.getAsJsonObject().get("publicKey").getAsString();
                     X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyString));
 
-                    System.out.println("Generating public key:\n");
                     // Generate PublicKey from its bytes
                     PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
 
-                    System.out.println("Generating private key:\n");
                     // Generate PrivateKey from its bytes
                     PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(CryptoHandler.processByteArr(Mode.DECRYPT, Base64.getDecoder().decode(privateKey), CryptoHandler.hashString(password), null));
                     PrivateKey privateKeyNew = keyFactory.generatePrivate(privateKeySpec);
 
-                    System.out.println("Creating keypair");
-                    System.out.println(publicKey.getAlgorithm());
-                    System.out.println(privateKeyNew.getAlgorithm());
                     // Create KeyPair
                     this.keyPair = new KeyPair(publicKey, privateKeyNew);
 
-                    System.out.println("RETRIEVED Private key: " + this.keyPair.getPrivate().getEncoded());
-                    System.out.println("RETRIEVED Public key: " + this.keyPair.getPublic().getEncoded());
-                    System.out.println("Password assigned");
                     this.logger_AccessHandler.info("Password assigned");
                     break;
                 }
@@ -258,8 +254,6 @@ public class AccessHandler {
         try {
             // Get keypair
             KeyPair keyPair = CryptoHandler.generateKeypair();
-            System.out.println("GENERATE Private key: " + keyPair.getPrivate().getEncoded());
-            System.out.println("GENERATE Public key: " + keyPair.getPublic().getEncoded());
 
             // Write private key into JSON file
             Gson gson = new Gson();
@@ -388,12 +382,7 @@ public class AccessHandler {
             byte[] sig = Files.readAllBytes(Paths.get(sigPath));
             byte[] data = Files.readAllBytes(Paths.get(filePath));
 
-            String userPublicKeyString = this.publicKeys.get(user);
-            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(userPublicKeyString));
-            KeyFactory kf = KeyFactory.getInstance("RSA");
-            PublicKey publicKey = kf.generatePublic(keySpec);
-
-            this.sig.initVerify(publicKey);
+            this.sig.initVerify(this.publicKeys.get(user));
             this.sig.update(data);
             return this.sig.verify(sig);
         } catch (Exception e){
