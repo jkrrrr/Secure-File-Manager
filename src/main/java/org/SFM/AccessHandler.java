@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.*;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
@@ -55,6 +56,14 @@ public class AccessHandler {
         }
 
         this.publicKeys = new HashMap<>();
+        updatePublicKeys();
+
+    }
+
+    /**
+     * Retrieves the public keys and updates them in the field
+     */
+    public void updatePublicKeys(){
         try (Reader reader = new FileReader(jsonPath_publicKeys)){
             this.logger_AccessHandler.debug("Retrieving public keys");
             Gson gson = new Gson();
@@ -72,7 +81,6 @@ public class AccessHandler {
         } catch (Exception e){
             this.logger_AccessHandler.error(e.getMessage());
         }
-
     }
 
     public static synchronized AccessHandler getInstance() throws Exception {
@@ -291,7 +299,6 @@ public class AccessHandler {
                 JsonObject newUser = new JsonObject();
                 newUser.addProperty("user", user);
                 newUser.addProperty("publicKey", Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()));
-//                newUser.addProperty("publicKey", Arrays.toString(keyPair.getPublic().getEncoded()));
 
                 jsonArray.add(newUser);
                 try (FileWriter writer = new FileWriter(jsonPath_publicKeys)) {
@@ -300,6 +307,7 @@ public class AccessHandler {
                     System.out.println("Writing error (public key): " + e.getMessage());
                     this.logger_AccessHandler.error("Writing error (public key): " + e.getMessage());
                 }
+                this.updatePublicKeys();
                 this.logger_AccessHandler.info("User {} successfully created", user);
                 return true;
 
@@ -375,21 +383,17 @@ public class AccessHandler {
      * @param user username of the sender
      * @return true if the signature is verified, false otherwise
      */
-    public boolean verify(String filePath, String sigPath, String user){
-        try {
-            byte[] sig = Files.readAllBytes(Paths.get(sigPath));
-            byte[] data = Files.readAllBytes(Paths.get(filePath));
+    public boolean verify(String filePath, String sigPath, String user) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+        byte[] sig = Files.readAllBytes(Paths.get(sigPath));
+        byte[] data = Files.readAllBytes(Paths.get(filePath));
 
-            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(this.publicKeys.get(user)));
-            KeyFactory kf = KeyFactory.getInstance("RSA");
-            PublicKey publicKey = kf.generatePublic(keySpec);
+        String userPublicKeyString = this.publicKeys.get(user);
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(userPublicKeyString));
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        PublicKey publicKey = kf.generatePublic(keySpec);
 
-            this.sig.initVerify(publicKey);
-            this.sig.update(data);
-            return this.sig.verify(sig);
-        } catch (Exception e) {
-            this.logger_AccessHandler.error(e.getMessage());
-            throw new RuntimeException(e);
-        }
+        this.sig.initVerify(publicKey);
+        this.sig.update(data);
+        return this.sig.verify(sig);
     }
 }
