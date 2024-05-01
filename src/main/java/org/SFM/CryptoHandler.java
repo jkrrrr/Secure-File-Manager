@@ -1,5 +1,6 @@
 package org.SFM;
 
+import com.fasterxml.jackson.databind.ser.Serializers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -70,20 +71,20 @@ public abstract class CryptoHandler {
     public static synchronized void processFile(Mode mode, String file, SecretKey secretKey, String ivString) {
         try{
             logger_CryptoHandler.info("Processing file %s (%s)".formatted(file, mode.toString()));
-            System.out.println("Secret key: " + Arrays.toString(secretKey.getEncoded()));
+//            System.out.println("Processing file " + file + "\nSecret key: " + Arrays.toString(secretKey.getEncoded()));
 
             // Create key and IV from strings
             logger_CryptoHandler.debug("   Creating key");
-            SecretKey key = new SecretKeySpec(secretKey.getEncoded(), "AES");
+//            SecretKey key = new SecretKeySpec(secretKey.getEncoded(), "AES");
 
             logger_CryptoHandler.debug("   Creating initialization vector");
             IvParameterSpec iv = new IvParameterSpec(ivString.getBytes());
 
             // Set correct cipher mode
             if (mode==Mode.ENCRYPT){
-                cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+                cipher.init(Cipher.ENCRYPT_MODE, secretKey, iv);
             } else if (mode==Mode.DECRYPT){
-                cipher.init(Cipher.DECRYPT_MODE, key, iv);
+                cipher.init(Cipher.DECRYPT_MODE, secretKey, iv);
             } else{
                 throw new Exception("Invalid process mode");
             }
@@ -110,36 +111,24 @@ public abstract class CryptoHandler {
     public static void encryptSecretKey(String keyPath, PublicKey publicKey){
         try{
             logger_CryptoHandler.debug("Encrypting secret key");
-            // Read file
-            byte[] inBytes = Files.readAllBytes(Path.of(keyPath));
-
             asymmetricCipher.init(Cipher.ENCRYPT_MODE, publicKey);
-
-            // Process file
-            byte[] processed = asymmetricCipher.doFinal(inBytes);
-
-            FileOutputStream outputStream = new FileOutputStream(keyPath);
-            outputStream.write(processed);
-            outputStream.close();
+            Path path = Paths.get(keyPath);
+            byte[] encryptedFileBytes = asymmetricCipher.doFinal(Files.readAllBytes(path));
+            Files.write(path, encryptedFileBytes);
         } catch (Exception e){
+            System.out.println(e.getMessage());
             logger_CryptoHandler.error(e.getMessage());
         }
     }
 
     public static void decryptSecretKey(String keyPath, PrivateKey privateKey){
         try{
-            // Read file
-            byte[] inBytes = Files.readAllBytes(Path.of(keyPath));
-
             asymmetricCipher.init(Cipher.DECRYPT_MODE, privateKey);
-
-            // Process file
-            byte[] processed = cipher.doFinal(inBytes);
-
-            FileOutputStream outputStream = new FileOutputStream(keyPath);
-            outputStream.write(processed);
-            outputStream.close();
+            Path path = Paths.get(keyPath);
+            byte[] decryptedFileBytes = asymmetricCipher.doFinal(Files.readAllBytes(path));
+            Files.write(path, decryptedFileBytes);
         } catch (Exception e){
+            System.out.println(e.getMessage());
             logger_CryptoHandler.error(e.getMessage());
         }
     }
@@ -220,18 +209,11 @@ public abstract class CryptoHandler {
             KeyGenerator keyGen = KeyGenerator.getInstance("AES");
             keyGen.init(256);
             SecretKey secretKey = keyGen.generateKey();
-            try {
-                File secretKeyFile = new File(dir + "/SecretKey");
-                byte[] toWrite = secretKey.getEncoded();
-                FileOutputStream outputStream = new FileOutputStream(secretKeyFile);
 
-                System.out.println("AES Key: " + toWrite);
-                outputStream.write(secretKey.getEncoded());
-                outputStream.close();
-
-            } catch (Exception e){
-                logger_CryptoHandler.error(e.getMessage());
-            }
+            byte[] toWrite = secretKey.getEncoded();
+            FileOutputStream fos = new FileOutputStream(dir + "/SecretKey");
+            fos.write(toWrite);
+            fos.close();
 
             // Create new directory
             File newDirectory = new File(dir + "/vault");
@@ -311,8 +293,8 @@ public abstract class CryptoHandler {
             ArrayList<Path> filePaths = dh.getDirContent(dir + "/vault", "file");
             // Get the symmetric key
             byte[] privateKeyByteArr = Files.readAllBytes(Paths.get(dir + "/SecretKey"));
+            System.out.println(privateKeyByteArr);
             SecretKey secretKey = new SecretKeySpec(privateKeyByteArr, "AES");
-            System.out.println("Decryption key: " + secretKey.getEncoded());
 
             System.out.println("Decrypting files");
             // Decrypt each file
@@ -375,7 +357,6 @@ public abstract class CryptoHandler {
         }
 
     }
-
 
 
 }
