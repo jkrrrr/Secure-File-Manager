@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.bouncycastle.jcajce.provider.asymmetric.X509;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
@@ -23,11 +24,13 @@ public class AccessHandler {
     private final Argon2PasswordEncoder arg2;
     private final Logger logger_AccessHandler;
     private KeyPair keyPair;
+    private Signature sig;
 
     private final String jsonPath_authentication = "authentication.json";
     private final String jsonPath_publicKeys = "publicKeys.json";
     private String path;
     private final HashMap<String, String> recordMap;
+    private final HashMap<String, String> publicKeys;
 
     /**
      * Responsible for authenticating user and creating new accounts
@@ -35,7 +38,8 @@ public class AccessHandler {
      */
     private AccessHandler() throws Exception {
         this.logger_AccessHandler = LoggerFactory.getLogger(AccessHandler.class);
-        
+        this.sig = Signature.getInstance("SHA256withRSA");
+
         try{
             this.arg2 = new Argon2PasswordEncoder(16, 32, 1, 60000, 10);
         } catch (Exception e){
@@ -49,6 +53,26 @@ public class AccessHandler {
             this.logger_AccessHandler.error(e.getMessage());
             throw new Exception();
         }
+
+        this.publicKeys = new HashMap<>();
+        try (Reader reader = new FileReader(jsonPath_publicKeys)){
+            this.logger_AccessHandler.debug("Retrieving public keys");
+            Gson gson = new Gson();
+            JsonArray jsonArray = gson.fromJson(reader, JsonArray.class);
+
+            for (JsonElement element : jsonArray){
+                JsonObject jsonObject = element.getAsJsonObject();
+
+                String user = jsonObject.get("user").getAsString();
+                String publicKey = jsonObject.get("publicKey").getAsString();
+
+                this.publicKeys.put(user, publicKey);
+            }
+            this.logger_AccessHandler.debug("Updated public keys");
+        } catch (Exception e){
+            this.logger_AccessHandler.error(e.getMessage());
+        }
+
     }
 
     public static synchronized AccessHandler getInstance() throws Exception {
@@ -101,7 +125,7 @@ public class AccessHandler {
                 String id = jsonObject.get("authenticationString").getAsString();
                 String privateKey = jsonObject.get("privateKey").getAsString();
 
-                recordMap.put(id, privateKey);
+                this.recordMap.put(id, privateKey);
             }
             this.logger_AccessHandler.debug("Updated hashes");
         } catch (Exception e){
@@ -321,26 +345,21 @@ public class AccessHandler {
 
     /**
      * Creates a digital signature from a string
-     * @param input input bytes
-     * @param privateKey private key to sign with
-     * @return output signature as an array of bytes
+     * @param filePath path of file to sign
+     * @param sigPath signature output path
      */
-    public void sign(String filePath) throws IOException {
+    public void sign(String filePath, String sigPath) throws IOException {
         try {
-            // Prepare signature file
-            File sigFile = new File("signature.sig");
-            FileOutputStream fileOutputStream = new FileOutputStream(sigFile);
-
             // Read filePath file
             byte[] toSign = Files.readAllBytes(Paths.get(filePath));
 
             // Generate signature
-            Signature sig = Signature.getInstance("SHA256withRSA");
-            sig.initSign(this.keyPair.getPrivate());
-            sig.update(toSign);
-            byte[] sigFinal = sig.sign();
-            System.out.println("Signature: " + Arrays.toString(sigFinal));
+            this.sig.initSign(this.keyPair.getPrivate());
+            this.sig.update(toSign);
+            byte[] sigFinal = this.sig.sign();
 
+            // Prepare signature file
+            FileOutputStream fileOutputStream = new FileOutputStream(sigPath);
             fileOutputStream.write(sigFinal);
             fileOutputStream.close();
             this.logger_AccessHandler.info("Created signature");
@@ -351,18 +370,24 @@ public class AccessHandler {
     
     /**
      * Verfies a digital signature
-     * @param string document the signature is verifying
-     * @param signature signature to verify
-     * @param publicKey public key of the sender
+     * @param filePath path of the document the signature is verifying
+     * @param sigPath path of signature to verify
+     * @param user username of the sender
      * @return true if the signature is verified, false otherwise
      */
-    public boolean verify(String string, byte[] signature, PublicKey publicKey){
+    public boolean verify(String filePath, String sigPath, String user){
         try {
-            Signature sig = Signature.getInstance("SHA256withRSA");
-            sig.initVerify(publicKey);
-            sig.update(string.getBytes());
-            return sig.verify(signature);
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            byte[] sig = Files.readAllBytes(Paths.get(sigPath));
+            byte[] data = Files.readAllBytes(Paths.get(filePath));
+
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(this.publicKeys.get(user)));
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            PublicKey publicKey = kf.generatePublic(keySpec);
+
+            this.sig.initVerify(publicKey);
+            this.sig.update(data);
+            return this.sig.verify(sig);
+        } catch (Exception e) {
             this.logger_AccessHandler.error(e.getMessage());
             throw new RuntimeException(e);
         }
