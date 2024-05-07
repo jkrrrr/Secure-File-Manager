@@ -97,55 +97,91 @@ public class Printer {
             });
 
             // Authenticate
-            // Username
-            StringBuilder currentlyTypedUsername = new StringBuilder();
-            textGraphics.putString(5, 2, "Username: " + currentlyTypedUsername);
-            textGraphics.putString(5, 3, "Password: ");
-            this.terminal.flush();
+            this.screen_authentication();
 
-            KeyStroke keyStroke = this.terminal.readInput();
-            this.logger_Printer.info("Entering authentication username loop");
-            while (keyStroke.getKeyType() != KeyType.Enter){
-                if (keyStroke.getCharacter() == '\b'){
-                    currentlyTypedUsername.setLength(Math.max(currentlyTypedUsername.length() - 1, 0));
-                } else {
-                    currentlyTypedUsername.append(keyStroke.getCharacter());
+            this.screen_directory();
+
+        } catch (IOException e) {
+            logger_Printer.error(e.getMessage());
+        } finally {
+            if (this.terminal != null) {
+                try {
+                    this.terminal.close();
+                } catch (IOException e) {
+                    logger_Printer.error(e.getMessage());
                 }
+            }
+        }
+    }
 
-                // TODO Clear screen before doing backspace
-                this.terminal.flush();
+    private void screen_authentication() throws Exception {
+        try {
+            while (true){
+                StringBuilder currentlyTypedUsername = new StringBuilder();
                 textGraphics.putString(5, 2, "Username: " + currentlyTypedUsername);
                 textGraphics.putString(5, 3, "Password: ");
                 this.terminal.flush();
 
+                KeyStroke keyStroke = this.terminal.readInput();
+                this.logger_Printer.info("Entering authentication username loop");
+                while (keyStroke.getKeyType() != KeyType.Enter){
+                    this.terminal.flush();
+                    if (keyStroke.getCharacter() == '\b'){
+                        currentlyTypedUsername.setLength(Math.max(currentlyTypedUsername.length() - 1, 0));
+                    } else {
+                        this.terminal.flush();
+                        if (keyStroke.getKeyType() == KeyType.Backspace && !currentlyTypedUsername.isEmpty()){
+                            currentlyTypedUsername.deleteCharAt(currentlyTypedUsername.length() - 1);
+                        } else {
+                            currentlyTypedUsername.append(keyStroke.getCharacter());
+                        }
+                    }
+
+                    this.terminal.clearScreen();
+                    // TODO Clear screen before doing backspace
+                    textGraphics.putString(5, 2, "Username: " + currentlyTypedUsername);
+                    textGraphics.putString(5, 3, "Password: ");
+                    this.terminal.flush();
+
+                    keyStroke = this.terminal.readInput();
+                }
+
+                // Password
+                StringBuilder currentlyTypedPassword = new StringBuilder();
                 keyStroke = this.terminal.readInput();
+                this.logger_Printer.info("Entering authentication password loop");
+                while (keyStroke.getKeyType() != KeyType.Enter){
+                    this.terminal.flush();
+                    if (keyStroke.getKeyType() == KeyType.Backspace && !currentlyTypedPassword.isEmpty()){
+                        currentlyTypedPassword.deleteCharAt(currentlyTypedPassword.length() - 1);
+                    } else {
+                        currentlyTypedPassword.append(keyStroke.getCharacter());
+                    }
+                    textGraphics.putString(5, 3, "Password: " + (currentlyTypedPassword));
+                    this.terminal.flush();
+
+                    keyStroke = this.terminal.readInput();
+                }
+
+                if (this.ah.authenticate(currentlyTypedUsername.toString(), currentlyTypedPassword.toString())){
+                    this.logger_Printer.info("Authentication complete");
+                }
+                textGraphics.putString(5, 5, "Incorrect username/password");
             }
+        } catch (Exception e) {
+            this.logger_Printer.error(e.getMessage());
+        }
+        this.terminal.clearScreen();
+    }
 
-            // Password
-            StringBuilder currentlyTypedPassword = new StringBuilder();
-            keyStroke = this.terminal.readInput();
-            this.logger_Printer.info("Entering authentication password loop");
-            while (keyStroke.getKeyType() != KeyType.Enter){
-
-                this.terminal.flush();
-                currentlyTypedPassword.append(keyStroke.getCharacter());
-                textGraphics.putString(5, 3, "Password: " + (currentlyTypedPassword));
-                this.terminal.flush();
-
-                keyStroke = this.terminal.readInput();
-            }
-
-            if (!this.ah.authenticate(currentlyTypedUsername.toString(), currentlyTypedPassword.toString())){
-                this.logger_Printer.info("Authentication failed");
-                System.exit(0);
-            }
-            this.logger_Printer.info("Authentication complete");
-
+    private void screen_directory(){
+        try {
+            this.display_controls();
             this.display_directory();
 
             this.logger_Printer.debug("   Reading key input");
             // Read key input
-            keyStroke = this.terminal.readInput();
+            KeyStroke keyStroke = this.terminal.readInput();
 
             while (keyStroke.getKeyType() != KeyType.Escape) {
                 this.logger_Printer.debug("Inside directory browser loop");
@@ -179,30 +215,30 @@ public class Printer {
                         this.currentHighlight = 0;
                         this.terminal.clearScreen();
                         break;
+                    case 'w':
+                        CryptoHandler.processDirectory(Mode.ENCRYPT, dh.currentDirPath, "aaaaaaaaaaaaaaaa");
+                        this.dirToPrint = new ArrayList<>(this.getDirContent());
+                        this.terminal.clearScreen();
+                        break;
+                    case 'e':
+                        CryptoHandler.processDirectory(Mode.DECRYPT, dh.currentDirPath, "aaaaaaaaaaaaaaaa");
+                        this.terminal.clearScreen();
+                        break;
                     default:
-                        this.logger_Printer.warn("Unknown key pressed");
+                        this.logger_Printer.warn("Unknown key pressed " + keyStroke.getCharacter());
                         break;
                 }
 
                 this.display_directory();
                 this.display_controls();
 
-                // Display content
-
                 // Read key input
                 keyStroke = this.terminal.readInput();
             }
-        } catch (IOException e) {
-            logger_Printer.error(e.getMessage());
-        } finally {
-            if (this.terminal != null) {
-                try {
-                    this.terminal.close();
-                } catch (IOException e) {
-                    logger_Printer.error(e.getMessage());
-                }
-            }
+        } catch (Exception e) {
+            this.logger_Printer.error(e.getMessage());
         }
+
     }
 
     /**
@@ -262,7 +298,7 @@ public class Printer {
     private void display_controls(){
         try{
             this.logger_Printer.debug("Printing controls");
-            textGraphics.putString(1, this.rows - 2, "j - up, k - down, a - enter dir, s - exit dir");
+            textGraphics.putString(1, this.rows - 2, "j - up, k - down, a - enter dir, s - exit dir, w - encrypt dir, e - decrypt dir");
             this.terminal.flush();
         } catch (Exception e){
             this.logger_Printer.error(e.getMessage());

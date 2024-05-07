@@ -378,10 +378,28 @@ public class AccessHandler {
 
             this.sig.initVerify(this.publicKeys.get(user));
             this.sig.update(data);
-            return this.sig.verify(sig);
+            boolean verified = this.sig.verify(sig);
+            if (verified){
+                this.auditLog("verified user " + user + " vault at " + filePath);
+            }
+            return verified;
         } catch (Exception e){
             this.logger_AccessHandler.error(e.getMessage());
         }
         return false;
     }
+
+    /***
+     * Appends a line to the audit log
+     * @param message message to append
+     */
+    private void auditLog(String message){
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("audit-log.log"))){
+            writer.write(message);
+            writer.newLine();
+        } catch (Exception e){
+            this.logger_AccessHandler.error(e.getMessage());
+        }
+    }
+
 }

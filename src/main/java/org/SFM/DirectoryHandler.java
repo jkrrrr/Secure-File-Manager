@@ -11,7 +11,7 @@ import java.util.Objects;
 
 public class DirectoryHandler {
     // Path of current directory
-    private String currentDirPath;
+    public String currentDirPath;
     // Content of current directory, stored as FileObjects
     private FileObject[] currentDir;
     private int numOfFiles;
