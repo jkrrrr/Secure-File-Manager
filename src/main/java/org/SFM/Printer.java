@@ -96,8 +96,7 @@ public class Printer {
 
             });
 
-            // Authenticate
-            this.screen_authentication();
+            this.screen_opening();
 
             this.screen_directory();
 
@@ -114,7 +113,122 @@ public class Printer {
         }
     }
 
-    private void screen_authentication() throws Exception {
+    private boolean screen_opening(){
+        try {
+            this.logger_Printer.debug("Displaying opening screen");
+            textGraphics.putString(5, 2, this.pointer + " Log in");
+            textGraphics.putString(5, 3, "  Create user");
+            this.terminal.flush();
+
+            KeyStroke keyStroke = this.terminal.readInput();
+            while (true) {
+                switch(keyStroke.getCharacter()){
+                    // Index down
+                    case 'j':
+                        if (this.currentHighlight + 1 <= 1)
+                            this.currentHighlight++;
+                        break;
+                    // Index up
+                    case 'k':
+                        if (this.currentHighlight - 1 >= 0)
+                            this.currentHighlight--;
+                        break;
+                    // Enter directory
+                    case 'a':
+                        // TO-DO Do something
+                        this.terminal.clearScreen();
+                        if (this.currentHighlight == 0){
+                            this.screen_authentication();
+                            return true;
+                        } else {
+                            this.screen_createUser();
+                        }
+                        this.currentHighlight = 0;
+                        break;
+                    default:
+                        this.logger_Printer.warn("Unknown key pressed " + keyStroke.getCharacter());
+                        break;
+                }
+
+                this.logger_Printer.debug("Current highlight: " + this.currentHighlight);
+                if (this.currentHighlight == 0){
+                    textGraphics.putString(5, 2, this.pointer + " Log in");
+                    textGraphics.putString(5, 3, "  Create user");
+                    this.terminal.flush();
+                } else {
+                    textGraphics.putString(5, 2, "  Log in");
+                    textGraphics.putString(5, 3, this.pointer + " Create user");
+                    this.terminal.flush();
+                }
+
+                // Read key input
+                keyStroke = this.terminal.readInput();
+            }
+
+        } catch (Exception e){
+            this.logger_Printer.error(e.getMessage());
+        }
+        return false;
+    }
+
+    private void screen_createUser(){
+        this.logger_Printer.debug("Displaying create user screen");
+        try {
+            StringBuilder currentlyTypedUsername = new StringBuilder();
+            textGraphics.putString(5, 2, "Username: " + currentlyTypedUsername);
+            textGraphics.putString(5, 3, "Password: ");
+            this.terminal.flush();
+
+            KeyStroke keyStroke = this.terminal.readInput();
+            this.logger_Printer.info("Entering user creation username loop");
+            while (keyStroke.getKeyType() != KeyType.Enter) {
+                this.terminal.flush();
+                if (keyStroke.getCharacter() == '\b') {
+                    currentlyTypedUsername.setLength(Math.max(currentlyTypedUsername.length() - 1, 0));
+                } else {
+                    this.terminal.flush();
+                    if (keyStroke.getKeyType() == KeyType.Backspace && !currentlyTypedUsername.isEmpty()) {
+                        currentlyTypedUsername.deleteCharAt(currentlyTypedUsername.length() - 1);
+                    } else {
+                        currentlyTypedUsername.append(keyStroke.getCharacter());
+                    }
+                }
+
+                this.terminal.clearScreen();
+                textGraphics.putString(5, 2, "Username: " + currentlyTypedUsername);
+                textGraphics.putString(5, 3, "Password: ");
+                this.terminal.flush();
+
+                keyStroke = this.terminal.readInput();
+            }
+
+            // Password
+            StringBuilder currentlyTypedPassword = new StringBuilder();
+            keyStroke = this.terminal.readInput();
+            this.logger_Printer.info("Entering authentication password loop");
+            while (keyStroke.getKeyType() != KeyType.Enter) {
+                this.terminal.flush();
+                if (keyStroke.getKeyType() == KeyType.Backspace && !currentlyTypedPassword.isEmpty()) {
+                    currentlyTypedPassword.deleteCharAt(currentlyTypedPassword.length() - 1);
+                } else {
+                    currentlyTypedPassword.append(keyStroke.getCharacter());
+                }
+                textGraphics.putString(5, 3, "Password: " + (currentlyTypedPassword));
+                this.terminal.flush();
+
+                keyStroke = this.terminal.readInput();
+            }
+
+            ah.createUser(currentlyTypedUsername.toString(), currentlyTypedPassword.toString());
+            this.terminal.clearScreen();
+        } catch (Exception e){
+            this.logger_Printer.error(e.getMessage());
+        }
+
+    }
+
+    private void screen_authentication(){
+        this.logger_Printer.debug("Displaying authentication screen");
         try {
             while (true){
                 StringBuilder currentlyTypedUsername = new StringBuilder();
@@ -164,16 +278,18 @@ public class Printer {
 
                 if (this.ah.authenticate(currentlyTypedUsername.toString(), currentlyTypedPassword.toString())){
                     this.logger_Printer.info("Authentication complete");
+                    break;
                 }
                 textGraphics.putString(5, 5, "Incorrect username/password");
             }
+            this.terminal.clearScreen();
         } catch (Exception e) {
             this.logger_Printer.error(e.getMessage());
         }
-        this.terminal.clearScreen();
     }
 
     private void screen_directory(){
+        this.logger_Printer.debug("Displaying directory screen");
         try {
             this.display_controls();
             this.display_directory();
@@ -189,12 +305,12 @@ public class Printer {
                 this.dirToPrint = new ArrayList<>(this.getDirContent());
 
                 switch(keyStroke.getCharacter()){
-                    // Index up
+                    // Index down
                     case 'j':
                         if (this.currentHighlight + 1 < this.dirToPrint.size())
                             this.currentHighlight++;
                         break;
-                    // Index down
+                    // Index up
                     case 'k':
                         if (this.currentHighlight - 1 >= 0)
                             this.currentHighlight--;
@@ -257,7 +373,8 @@ public class Printer {
         try {
             this.logger_Printer.info("Printing dir content");
             for (FileObject child : this.dh.getDirContent()){
-                this.logger_Printer.debug("   Printing " + child.getName().getBaseName());
+                // Can cause log files to be very large
+//                this.logger_Printer.debug("   Printing " + child.getName().getBaseName());
                 if (child.getType() == FileType.FOLDER)
                     toReturn.add("□ " + child.getName().getBaseName());
                 if (child.getType() == FileType.FILE)
