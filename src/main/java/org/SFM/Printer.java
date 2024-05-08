@@ -138,7 +138,6 @@ public class Printer {
                     }
 
                     this.terminal.clearScreen();
-                    // TODO Clear screen before doing backspace
                     textGraphics.putString(5, 2, "Username: " + currentlyTypedUsername);
                     textGraphics.putString(5, 3, "Password: ");
                     this.terminal.flush();
