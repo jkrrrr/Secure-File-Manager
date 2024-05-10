@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.KeyFactory;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -102,8 +101,6 @@ public class Printer {
 
             this.screen_opening();
 
-            this.screen_directory();
-
         } catch (IOException e) {
             logger_Printer.error(e.getMessage());
         } finally {
@@ -124,8 +121,8 @@ public class Printer {
             textGraphics.putString(5, 3, "  Create user");
             this.terminal.flush();
 
-            KeyStroke keyStroke = this.terminal.readInput();
             while (true) {
+                KeyStroke keyStroke = this.terminal.readInput();
                 switch(keyStroke.getCharacter()){
                     // Index down
                     case 'j':
@@ -142,16 +139,22 @@ public class Printer {
                         this.terminal.clearScreen();
                         if (this.currentHighlight == 0){
                             this.screen_authentication();
-                            return true;
                         } else {
                             this.screen_createUser();
                         }
+
                         this.currentHighlight = 0;
-                        break;
+                        this.terminal.clearScreen();
+                        textGraphics.putString(5, 2, this.pointer + " Log in");
+                        textGraphics.putString(5, 3, "  Create user");
+                        this.terminal.flush();
+                        continue;
                     default:
                         this.logger_Printer.warn("Unknown key pressed " + keyStroke.getCharacter());
                         break;
                 }
+
+                this.terminal.clearScreen();
 
                 if (this.currentHighlight == 0){
                     textGraphics.putString(5, 2, this.pointer + " Log in");
@@ -162,9 +165,6 @@ public class Printer {
                     textGraphics.putString(5, 3, this.pointer + " Create user");
                     this.terminal.flush();
                 }
-
-                // Read key input
-                keyStroke = this.terminal.readInput();
             }
 
         } catch (Exception e){
@@ -173,7 +173,7 @@ public class Printer {
         return false;
     }
 
-    private void screen_createUser(){
+    private boolean screen_createUser(){
         this.logger_Printer.debug("Displaying create user screen");
         try {
             StringBuilder currentlyTypedUsername = new StringBuilder();
@@ -186,7 +186,10 @@ public class Printer {
                 this.terminal.flush();
                 if (keyStroke.getKeyType() == KeyType.Backspace){
                     currentlyTypedUsername.setLength(Math.max(currentlyTypedUsername.length() - 1, 0));
-                } else {
+                } else if (keyStroke.getKeyType() == KeyType.Escape){
+                    return true;
+                }
+                else {
                     currentlyTypedUsername.append(keyStroke.getCharacter());
                 }
 
@@ -205,7 +208,10 @@ public class Printer {
                 this.terminal.flush();
                 if (keyStroke.getKeyType() == KeyType.Backspace){
                     currentlyTypedPassword.setLength(Math.max(currentlyTypedPassword.length() - 1, 0));
-                } else {
+                } else if (keyStroke.getKeyType() == KeyType.Escape){
+                    return true;
+                }
+                else {
                     currentlyTypedPassword.append(keyStroke.getCharacter());
                 }
 
@@ -224,9 +230,10 @@ public class Printer {
             this.logger_Printer.error(e.getMessage());
         }
 
+        return false;
     }
 
-    private void screen_authentication(){
+    private boolean screen_authentication(){
         this.logger_Printer.debug("Displaying authentication screen");
         try {
             while (true){
@@ -241,6 +248,8 @@ public class Printer {
                     this.terminal.flush();
                     if (keyStroke.getKeyType() == KeyType.Backspace){
                         currentlyTypedUsername.setLength(Math.max(currentlyTypedUsername.length() - 1, 0));
+                    } else if (keyStroke.getKeyType() == KeyType.Escape) {
+                        return true;
                     } else {
                         currentlyTypedUsername.append(keyStroke.getCharacter());
                     }
@@ -261,7 +270,10 @@ public class Printer {
                     this.terminal.flush();
                     if (keyStroke.getKeyType() == KeyType.Backspace){
                         currentlyTypedPassword.setLength(Math.max(currentlyTypedPassword.length() - 1, 0));
-                    } else {
+                    } else if (keyStroke.getKeyType() == KeyType.Escape){
+                        return true;
+                    }
+                    else {
                         currentlyTypedPassword.append(keyStroke.getCharacter());
                     }
 
@@ -275,19 +287,24 @@ public class Printer {
 
                 if (this.ah.authenticate(currentlyTypedUsername.toString(), currentlyTypedPassword.toString())){
                     this.logger_Printer.info("Authentication complete");
-                    break;
+                    this.screen_directory();
+                    this.terminal.clearScreen();
+                    return true;
+                } else {
+                    textGraphics.putString(5, 5, "Incorrect username/password");
                 }
-                textGraphics.putString(5, 5, "Incorrect username/password");
             }
-            this.terminal.clearScreen();
         } catch (Exception e) {
             this.logger_Printer.error(e.getMessage());
         }
+        return false;
     }
 
-    private void screen_directory(){
+    private boolean screen_directory(){
         this.logger_Printer.debug("Displaying directory screen");
         try {
+            this.terminal.clearScreen();
+
             this.display_controls();
             this.display_directory();
 
@@ -327,25 +344,28 @@ public class Printer {
                         this.terminal.clearScreen();
                         break;
                     case 'w':
-                        CryptoHandler.processDirectory(Mode.ENCRYPT, dh.currentDirPath, "aaaaaaaaaaaaaaaa");
-                        ah.sign(Paths.get(Paths.get(dh.currentDirPath).getParent() + "/vault/manifest.json"), Paths.get(dh.currentDirPath).getParent() + "/signature.txt");
-                        CryptoHandler.encryptSecretKey(Paths.get(dh.currentDirPath).getParent() + "/SecretKey", ah.publicKeys.get(ah.username));
+                        CryptoHandler.processDirectory(Mode.ENCRYPT, dh.getCurrentDirPath(), "aaaaaaaaaaaaaaaa");
+                        ah.sign(Paths.get(Paths.get(dh.getCurrentDirPath()).getParent() + "/vault/manifest.json"), Paths.get(dh.getCurrentDirPath()).getParent() + "/signature.txt");
+                        CryptoHandler.encryptSecretKey(Paths.get(dh.getCurrentDirPath()).getParent() + "/SecretKey", ah.publicKeys.get(screen_inputUser("receiver")));
 
                         this.dirToPrint = new ArrayList<>(this.getDirContent());
                         this.terminal.clearScreen();
                         break;
                     case 'e':
-                        Path upperPath;
-                        if (dh.currentDirPath.contains("file:///")){
-                            upperPath = Paths.get(dh.currentDirPath.split("file:///")[1]).getParent();
-                        } else{
-                            upperPath = Paths.get(dh.currentDirPath).getParent();
+                        Path upperPath = Paths.get(dh.getCurrentDirPath()).getParent();
+
+                        if (ah.verify(Paths.get(upperPath + "/vault/manifest.json"), upperPath + "/signature.txt", this.screen_inputUser("sender"))){
+                            textGraphics.putString(5, 3, "Signature verified");
+                        } else {
+                            textGraphics.putString(5, 3, "Signature not verified");
                         }
+                        this.terminal.flush();
 
-                        this.screen_verify(upperPath);
+                        TimeUnit.SECONDS.sleep(3);
 
+                        this.terminal.clearScreen();
                         CryptoHandler.decryptSecretKey(upperPath + "/SecretKey", ah.getPrivateKey());
-                        CryptoHandler.processDirectory(Mode.DECRYPT, dh.currentDirPath, "aaaaaaaaaaaaaaaa");
+                        CryptoHandler.processDirectory(Mode.DECRYPT, dh.getCurrentDirPath(), "aaaaaaaaaaaaaaaa");
                         this.terminal.clearScreen();
                         break;
                     default:
@@ -359,17 +379,18 @@ public class Printer {
                 // Read key input
                 keyStroke = this.terminal.readInput();
             }
+            return true;
         } catch (Exception e) {
             this.logger_Printer.error(e.getMessage());
         }
-
+        return false;
     }
 
-    private boolean screen_verify(Path upperPath){
+    private String screen_inputUser(String typeUser){
         try{
             this.terminal.clearScreen();
 
-            textGraphics.putString(5, 2, "Input sender username: ");
+            textGraphics.putString(5, 2, "Input " + typeUser + " username: ");
             this.terminal.flush();
 
             StringBuilder currentlyTypedUsername = new StringBuilder();
@@ -383,31 +404,20 @@ public class Printer {
                 }
 
                 this.terminal.clearScreen();
-                textGraphics.putString(5, 2, "Input sender username: " + currentlyTypedUsername);
+                textGraphics.putString(5, 2, "Input " + typeUser + " username: " + currentlyTypedUsername);
                 this.terminal.flush();
 
                 keyStroke = this.terminal.readInput();
             }
 
-            if (ah.verify(Paths.get(upperPath + "/vault/manifest.json"), upperPath + "/signature.txt", currentlyTypedUsername.toString())){
-                textGraphics.putString(5, 3, "Signature verified");
-            } else {
-                textGraphics.putString(5, 3, "Signature not verified");
-            }
-            this.terminal.flush();
-
-            TimeUnit.SECONDS.sleep(3);
-
             this.terminal.clearScreen();
-            return true;
+            return currentlyTypedUsername.toString();
         } catch (Exception e){
             this.logger_Printer.error(e.getMessage());
         }
 
-        return false;
-
+        return null;
     }
-
     /**
      * Singleton checking
      */

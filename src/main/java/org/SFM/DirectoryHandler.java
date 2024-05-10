@@ -89,6 +89,12 @@ public class DirectoryHandler {
         }
     }
 
+    public String getCurrentDirPath(){
+        if (this.currentDirPath.contains("file:///"))
+            return this.currentDirPath.split("file:///")[1];
+        return this.currentDirPath;
+    }
+
     /**
      * Prints the content of the current directory
      */
