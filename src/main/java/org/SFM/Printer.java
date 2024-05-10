@@ -473,7 +473,7 @@ public class Printer {
      */
     private void display_controls(){
         try{
-            textGraphics.putString(1, this.rows - 2, "j - up, k - down, a - enter dir, s - exit dir, w - encrypt dir, e - decrypt dir");
+            textGraphics.putString(1, 1, "j - up, k - down, a - enter dir, s - exit dir, w - encrypt dir, e - decrypt dir");
             this.terminal.flush();
         } catch (Exception e){
             this.logger_Printer.error(e.getMessage());
