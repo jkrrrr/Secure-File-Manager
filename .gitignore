@@ -18,9 +18,9 @@ replay_pid*
 SMF.iml
 
 *.txt
-/logs
+logs/
 
-/target
+target/
 dependency-reduced-pom.xml
 config.properties
-/testEnv
+testEnv/

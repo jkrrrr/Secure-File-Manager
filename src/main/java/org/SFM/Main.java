@@ -1,12 +1,17 @@
 package org.SFM;
 
+import org.apache.commons.codec.digest.Crypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.util.Arrays;
+import java.util.Properties;
+import java.util.Scanner;
 import java.util.logging.LogManager;
 
 public class Main {
@@ -30,19 +35,20 @@ public class Main {
 
         String baseDir = properties.getProperty("baseDir");
         String passwordPath = properties.getProperty("passwordPath");
+        String keyPath = properties.getProperty("keyPath");
+        String sigPath = properties.getProperty("sigPath");
 
         // Load classes
-        CryptoHandler ch = new CryptoHandler();
-        DirectoryHandler dh = new DirectoryHandler(baseDir);
-        Printer p = Printer.getInstance(dh);
-        PasswordHandler ph = PasswordHandler.getInstance(passwordPath);
+        DirectoryHandler dh = new DirectoryHandler(System.getProperty("user.dir"));
+        AccessHandler ah = AccessHandler.getInstance();
+        ah.setPath(System.getProperty("user.dir") + "/authentication.json");
 
-        Scanner scanner = new Scanner(System.in);
-        // TESTING
-        ch.processDirectory(Mode.ENCRYPT, baseDir, "aaaaaaaaaaaaaaaa", "aaaaaaaaaaaaaaaa");
-        System.out.println("Waiting for input...");
-        scanner.nextLine();
-        ch.processDirectory(Mode.DECRYPT, baseDir, "aaaaaaaaaaaaaaaa", "aaaaaaaaaaaaaaaa");
-        scanner.close();
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        kpg.initialize(2048);
+        // Reset database
+        ah.reset();
+
+        Printer p = Printer.getInstance(dh);
+
     }
 }
