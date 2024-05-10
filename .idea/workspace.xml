@@ -1,0 +1,852 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AnalysisUIOptions">
+    <option name="ANALYZE_INJECTED_CODE" value="false" />
+  </component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="a00e87a4-60a0-44e7-aa90-32081a44e47b" name="Changes" comment="feat: digital signatures with GUI">
+      <change beforePath="$PROJECT_DIR$/authentication.json" beforeDir="false" afterPath="$PROJECT_DIR$/authentication.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/publicKeys.json" beforeDir="false" afterPath="$PROJECT_DIR$/publicKeys.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/SFM/DirectoryHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/SFM/DirectoryHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/SFM/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/SFM/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/SFM/Printer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/SFM/Printer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/MainTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/MainTest.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Enum" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="verify-password-changes" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="ROOT_SYNC" value="DONT_SYNC" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;jkrrrr&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">
+    <option name="selectedUrlAndAccountId">
+      <UrlAndAccount>
+        <option name="accountId" value="0df97d36-e14b-4b9e-bd06-353871b552f2" />
+        <option name="url" value="https://github.com/jkrrrr/Secure-File-Manager.git" />
+      </UrlAndAccount>
+    </option>
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="jar://$MAVEN_REPOSITORY$/org/jline/jline/3.23.0/jline-3.23.0-sources.jar!/org/jline/terminal/Terminal.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/org/jline/jline/3.23.0/jline-3.23.0-sources.jar!/org/jline/terminal/TerminalBuilder.java" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5
+}</component>
+  <component name="ProjectId" id="2XqVLONcAisbeGhwdfWzTvwptW1" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
+    &quot;Attach to process.pid 32512.executor&quot;: &quot;ProcessAttachDebug&quot;,
+    &quot;JUnit.MainTest.addLogin.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.MainTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.MainTest.manualRest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.MainTest.testCreateUser [10].executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.MainTest.testCreateUser.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.MainTest.test_authenticateUser [10].executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.MainTest.test_authenticateUser [30].executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.MainTest.test_authenticateUser.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.MainTest.test_authenticateUserMulti [10].executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.MainTest.test_createUser [10].executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.MainTest.test_createUser [1].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.SFM [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.SFM [package,-Dmaven.test.skip].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.SFM [package].executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Chris Harland/Desktop/jline/jline3&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.44444445&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Chris Harland\Desktop\Secure-File-Manager\src\main\resources" />
+      <recent name="C:\Users\Chris Harland\Desktop\Secure-File-Manager" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Maven.SFM [package,-Dmaven.test.skip]">
+    <configuration name="Main" type="Application" factoryName="Application" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="org.SFM.Main" />
+      <module name="SFM" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="org.SFM.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MainTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="SFM" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="MainTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MainTest.addLogin" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="SFM" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="MainTest" />
+      <option name="METHOD_NAME" value="addLogin" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MainTest.manualRest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="SFM" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="MainTest" />
+      <option name="METHOD_NAME" value="manualRest" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MainTest.testCreateUser [3]" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true" repeat_count="3" repeat_mode="N Times">
+      <module name="SFM" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="MainTest" />
+      <option name="METHOD_NAME" value="testCreateUser" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MainTest.test_authenticateUser [10]" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true" repeat_mode="N Times">
+      <module name="SFM" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="MainTest" />
+      <option name="METHOD_NAME" value="test_authenticateUser" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MainTest.test_authenticateUserMulti [10]" type="JUnit" factoryName="JUnit" nameIsGenerated="true" repeat_count="20" repeat_mode="N Times">
+      <module name="SFM" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="MainTest" />
+      <option name="METHOD_NAME" value="test_authenticateUserMulti" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MainTest.test_createUser [1]" type="JUnit" factoryName="JUnit" nameIsGenerated="true" repeat_mode="N Times">
+      <module name="SFM" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="MainTest" />
+      <option name="METHOD_NAME" value="test_createUser" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Java" type="JarApplication">
+      <option name="JAR_PATH" value="$PROJECT_DIR$/target/SFM-1.0-SNAPSHOT.jar" />
+      <option name="WORKING_DIRECTORY" value="C:\Users\Chris Harland\Desktop\Secure-File-Manager" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <method v="2" />
+    </configuration>
+    <configuration name="SFM [exec:java]" type="MavenRunConfiguration" factoryName="Maven" nameIsGenerated="true">
+      <MavenSettings>
+        <option name="myGeneralSettings" />
+        <option name="myRunnerSettings" />
+        <option name="myRunnerParameters">
+          <MavenRunnerParameters>
+            <option name="cmdOptions" />
+            <option name="profiles">
+              <set />
+            </option>
+            <option name="goals">
+              <list>
+                <option value="exec:java" />
+              </list>
+            </option>
+            <option name="multimoduleDir" />
+            <option name="pomFileName" />
+            <option name="profilesMap">
+              <map />
+            </option>
+            <option name="projectsCmdOptionValues">
+              <list />
+            </option>
+            <option name="resolveToWorkspace" value="false" />
+            <option name="workingDirPath" value="$PROJECT_DIR$" />
+          </MavenRunnerParameters>
+        </option>
+      </MavenSettings>
+      <method v="2" />
+    </configuration>
+    <configuration name="SFM [package,-Dmaven.test.skip]" type="MavenRunConfiguration" factoryName="Maven" nameIsGenerated="true">
+      <MavenSettings>
+        <option name="myGeneralSettings" />
+        <option name="myRunnerSettings" />
+        <option name="myRunnerParameters">
+          <MavenRunnerParameters>
+            <option name="cmdOptions" />
+            <option name="profiles">
+              <set />
+            </option>
+            <option name="goals">
+              <list>
+                <option value="package" />
+                <option value="-Dmaven.test.skip" />
+              </list>
+            </option>
+            <option name="multimoduleDir" />
+            <option name="pomFileName" />
+            <option name="profilesMap">
+              <map />
+            </option>
+            <option name="projectsCmdOptionValues">
+              <list />
+            </option>
+            <option name="resolveToWorkspace" value="false" />
+            <option name="workingDirPath" value="$PROJECT_DIR$" />
+          </MavenRunnerParameters>
+        </option>
+      </MavenSettings>
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Application.Main" />
+      <item itemvalue="JAR Application.Java" />
+      <item itemvalue="JUnit.MainTest.test_authenticateUserMulti [10]" />
+      <item itemvalue="JUnit.MainTest.test_createUser [1]" />
+      <item itemvalue="JUnit.MainTest.addLogin" />
+      <item itemvalue="JUnit.MainTest.manualRest" />
+      <item itemvalue="JUnit.MainTest" />
+      <item itemvalue="JUnit.MainTest.test_authenticateUser [10]" />
+      <item itemvalue="JUnit.MainTest.testCreateUser [3]" />
+      <item itemvalue="Maven.SFM [exec:java]" />
+      <item itemvalue="Maven.SFM [package,-Dmaven.test.skip]" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.MainTest.addLogin" />
+        <item itemvalue="JUnit.MainTest.manualRest" />
+        <item itemvalue="JUnit.MainTest.test_authenticateUser [10]" />
+        <item itemvalue="JUnit.MainTest" />
+        <item itemvalue="JUnit.MainTest.testCreateUser [3]" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="jdk-17.0.9-corretto-17.0.9-f644763e9732-ebaef533" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="a00e87a4-60a0-44e7-aa90-32081a44e47b" name="Changes" comment="" />
+      <created>1699356540787</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1699356540787</updated>
+      <workItem from="1699356542136" duration="1899000" />
+      <workItem from="1699359016637" duration="557000" />
+      <workItem from="1699359856174" duration="4588000" />
+      <workItem from="1699444555491" duration="3032000" />
+      <workItem from="1699460104668" duration="1133000" />
+      <workItem from="1699524982881" duration="489000" />
+      <workItem from="1699958042883" duration="768000" />
+      <workItem from="1699959322873" duration="12160000" />
+      <workItem from="1700041842124" duration="7787000" />
+      <workItem from="1700055319028" duration="3003000" />
+      <workItem from="1700064450012" duration="159000" />
+      <workItem from="1700144620237" duration="3081000" />
+      <workItem from="1701101639553" duration="769000" />
+      <workItem from="1701102935639" duration="117000" />
+      <workItem from="1701180906169" duration="6564000" />
+      <workItem from="1701424856118" duration="9855000" />
+      <workItem from="1701698690199" duration="608000" />
+      <workItem from="1701974976073" duration="1322000" />
+      <workItem from="1702303804465" duration="2840000" />
+      <workItem from="1702398248088" duration="961000" />
+      <workItem from="1702551153547" duration="13881000" />
+      <workItem from="1703776312580" duration="13000" />
+      <workItem from="1703859385539" duration="7233000" />
+      <workItem from="1703933353222" duration="5441000" />
+      <workItem from="1703965948258" duration="4547000" />
+      <workItem from="1704017008366" duration="9618000" />
+      <workItem from="1704108889398" duration="7822000" />
+      <workItem from="1704185861332" duration="5609000" />
+      <workItem from="1704463762996" duration="670000" />
+      <workItem from="1704703873484" duration="9549000" />
+      <workItem from="1704793752758" duration="2051000" />
+      <workItem from="1704795835672" duration="622000" />
+      <workItem from="1704796485261" duration="10796000" />
+      <workItem from="1704874621418" duration="13238000" />
+      <workItem from="1704959706032" duration="9125000" />
+      <workItem from="1705219203108" duration="20144000" />
+      <workItem from="1705311705126" duration="267000" />
+      <workItem from="1705403705460" duration="955000" />
+      <workItem from="1705405007323" duration="2064000" />
+      <workItem from="1705413413250" duration="75000" />
+      <workItem from="1705413516162" duration="13362000" />
+      <workItem from="1705432562528" duration="42000" />
+      <workItem from="1705479957923" duration="14549000" />
+      <workItem from="1705500121456" duration="3675000" />
+      <workItem from="1705911576856" duration="3241000" />
+      <workItem from="1705919271046" duration="13283000" />
+      <workItem from="1705999576249" duration="13082000" />
+      <workItem from="1706090023742" duration="9329000" />
+      <workItem from="1706123748566" duration="6159000" />
+      <workItem from="1706178896590" duration="14929000" />
+      <workItem from="1706261967563" duration="4004000" />
+      <workItem from="1706284207565" duration="911000" />
+      <workItem from="1706431902347" duration="14417000" />
+      <workItem from="1706519176442" duration="17144000" />
+      <workItem from="1706609566603" duration="974000" />
+      <workItem from="1707038050488" duration="5604000" />
+      <workItem from="1707823008648" duration="2345000" />
+      <workItem from="1708273409852" duration="1615000" />
+      <workItem from="1708276219863" duration="2120000" />
+      <workItem from="1708437385553" duration="1494000" />
+      <workItem from="1708508415148" duration="4050000" />
+      <workItem from="1708518143882" duration="451000" />
+      <workItem from="1708518975025" duration="6948000" />
+      <workItem from="1708688588916" duration="4548000" />
+      <workItem from="1709226345575" duration="5826000" />
+      <workItem from="1709279932303" duration="9698000" />
+      <workItem from="1709565430702" duration="48000" />
+      <workItem from="1709638565755" duration="8213000" />
+      <workItem from="1709728091686" duration="1522000" />
+      <workItem from="1709808135436" duration="607000" />
+      <workItem from="1709888495597" duration="6556000" />
+      <workItem from="1709978785063" duration="833000" />
+      <workItem from="1710329558300" duration="2149000" />
+      <workItem from="1710490637279" duration="5221000" />
+      <workItem from="1710669337690" duration="13339000" />
+      <workItem from="1710697894187" duration="2672000" />
+      <workItem from="1710839654014" duration="17366000" />
+      <workItem from="1710922918012" duration="7918000" />
+      <workItem from="1711018675695" duration="601000" />
+      <workItem from="1713346905543" duration="2144000" />
+      <workItem from="1713359567523" duration="276000" />
+      <workItem from="1713359874747" duration="1879000" />
+      <workItem from="1713947050749" duration="454000" />
+      <workItem from="1713947539222" duration="7513000" />
+      <workItem from="1714298001812" duration="6681000" />
+      <workItem from="1714323146667" duration="1638000" />
+      <workItem from="1714547847376" duration="22512000" />
+      <workItem from="1714635483109" duration="1881000" />
+      <workItem from="1714819492004" duration="1694000" />
+      <workItem from="1714835211639" duration="3052000" />
+      <workItem from="1715081470024" duration="8401000" />
+      <workItem from="1715176201464" duration="92000" />
+      <workItem from="1715176316720" duration="4368000" />
+      <workItem from="1715247918875" duration="1087000" />
+      <workItem from="1715322691453" duration="17657000" />
+      <workItem from="1715350147135" duration="55000" />
+      <workItem from="1715350656743" duration="1796000" />
+    </task>
+    <task id="LOCAL-00001" summary="Initial commit">
+      <created>1699359155345</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1699359155345</updated>
+    </task>
+    <task id="LOCAL-00032" summary="feat: directory indexing">
+      <option name="closed" value="true" />
+      <created>1703968216868</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1703968216869</updated>
+    </task>
+    <task id="LOCAL-00033" summary="feat: upward directory indexing and validation">
+      <option name="closed" value="true" />
+      <created>1704021376746</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1704021376746</updated>
+    </task>
+    <task id="LOCAL-00034" summary="docs: main class commenting">
+      <option name="closed" value="true" />
+      <created>1704022011377</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1704022011377</updated>
+    </task>
+    <task id="LOCAL-00035" summary="docs: commenting and logging">
+      <option name="closed" value="true" />
+      <created>1704022514092</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1704022514092</updated>
+    </task>
+    <task id="LOCAL-00036" summary="fix: travelling up from top-level dir">
+      <option name="closed" value="true" />
+      <created>1704041892740</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1704041892740</updated>
+    </task>
+    <task id="LOCAL-00037" summary=" chore: code cleanup">
+      <option name="closed" value="true" />
+      <created>1704045903722</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1704045903722</updated>
+    </task>
+    <task id="LOCAL-00038" summary="refactor: Printer class to handle graphics displaying">
+      <option name="closed" value="true" />
+      <created>1704117657284</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1704117657284</updated>
+    </task>
+    <task id="LOCAL-00039" summary="chore: code cleanup">
+      <option name="closed" value="true" />
+      <created>1704119428998</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1704119428998</updated>
+    </task>
+    <task id="LOCAL-00040" summary="feat: display controls, key validation">
+      <option name="closed" value="true" />
+      <created>1704883804477</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1704883804477</updated>
+    </task>
+    <task id="LOCAL-00041" summary="chore: updated .gitignore">
+      <option name="closed" value="true" />
+      <created>1704883840789</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1704883840789</updated>
+    </task>
+    <task id="LOCAL-00042" summary="feat: directory encryption functionality">
+      <option name="closed" value="true" />
+      <created>1704883894664</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1704883894664</updated>
+    </task>
+    <task id="LOCAL-00043" summary="feat: directory decryption functionality">
+      <option name="closed" value="true" />
+      <created>1705236684421</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1705236684421</updated>
+    </task>
+    <task id="LOCAL-00044" summary="refactor: removed debugging features">
+      <option name="closed" value="true" />
+      <created>1705237174850</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1705237174850</updated>
+    </task>
+    <task id="LOCAL-00045" summary="feat: delete dir after encryption">
+      <option name="closed" value="true" />
+      <created>1705247263155</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1705247263155</updated>
+    </task>
+    <task id="LOCAL-00046" summary="docs: commenting">
+      <option name="closed" value="true" />
+      <created>1705247797290</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1705247797290</updated>
+    </task>
+    <task id="LOCAL-00047" summary="refactor: optimisations and commenting">
+      <option name="closed" value="true" />
+      <created>1705248384192</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1705248384192</updated>
+    </task>
+    <task id="LOCAL-00048" summary="build: updated dependency">
+      <option name="closed" value="true" />
+      <created>1705489226165</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1705489226165</updated>
+    </task>
+    <task id="LOCAL-00049" summary="chore: updated logging">
+      <option name="closed" value="true" />
+      <created>1705511815805</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1705511815806</updated>
+    </task>
+    <task id="LOCAL-00050" summary="feat: username and password authentication">
+      <option name="closed" value="true" />
+      <created>1705913493689</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1705913493689</updated>
+    </task>
+    <task id="LOCAL-00051" summary="feat: keypair creating and validation">
+      <option name="closed" value="true" />
+      <created>1705938517461</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1705938517461</updated>
+    </task>
+    <task id="LOCAL-00052" summary="test: testing">
+      <option name="closed" value="true" />
+      <created>1705941332335</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1705941332336</updated>
+    </task>
+    <task id="LOCAL-00053" summary="feat: empty files for functioning">
+      <option name="closed" value="true" />
+      <created>1705941364375</created>
+      <option name="number" value="00053" />
+      <option name="presentableId" value="LOCAL-00053" />
+      <option name="project" value="LOCAL" />
+      <updated>1705941364376</updated>
+    </task>
+    <task id="LOCAL-00054" summary="build: added dependency">
+      <option name="closed" value="true" />
+      <created>1705941400547</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1705941400547</updated>
+    </task>
+    <task id="LOCAL-00055" summary="perf: authentication multi-threading">
+      <option name="closed" value="true" />
+      <created>1706003481223</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1706003481223</updated>
+    </task>
+    <task id="LOCAL-00056" summary="test: persistent test">
+      <option name="closed" value="true" />
+      <created>1706003717540</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1706003717540</updated>
+    </task>
+    <task id="LOCAL-00057" summary="refactor: AccessHandler logging">
+      <option name="closed" value="true" />
+      <created>1706005846143</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1706005846143</updated>
+    </task>
+    <task id="LOCAL-00058" summary="feat: convert manifest from txt to json file">
+      <option name="closed" value="true" />
+      <created>1706012259297</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1706012259297</updated>
+    </task>
+    <task id="LOCAL-00059" summary="fix: file object class">
+      <option name="closed" value="true" />
+      <created>1706012824446</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1706012824446</updated>
+    </task>
+    <task id="LOCAL-00060" summary="feat: hide file names">
+      <option name="closed" value="true" />
+      <created>1706094988598</created>
+      <option name="number" value="00060" />
+      <option name="presentableId" value="LOCAL-00060" />
+      <option name="project" value="LOCAL" />
+      <updated>1706094988599</updated>
+    </task>
+    <task id="LOCAL-00061" summary="fix: file content turned into manifest">
+      <option name="closed" value="true" />
+      <created>1706097733282</created>
+      <option name="number" value="00061" />
+      <option name="presentableId" value="LOCAL-00061" />
+      <option name="project" value="LOCAL" />
+      <updated>1706097733282</updated>
+    </task>
+    <task id="LOCAL-00062" summary="feat: en/decryption multithreading">
+      <option name="closed" value="true" />
+      <created>1706197956904</created>
+      <option name="number" value="00062" />
+      <option name="presentableId" value="LOCAL-00062" />
+      <option name="project" value="LOCAL" />
+      <updated>1706197956905</updated>
+    </task>
+    <task id="LOCAL-00063" summary="refactor: authentication overhaul">
+      <option name="closed" value="true" />
+      <created>1706544657970</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1706544657970</updated>
+    </task>
+    <task id="LOCAL-00064" summary="refactor: code cleanup">
+      <option name="closed" value="true" />
+      <created>1706546280900</created>
+      <option name="number" value="00064" />
+      <option name="presentableId" value="LOCAL-00064" />
+      <option name="project" value="LOCAL" />
+      <updated>1706546280900</updated>
+    </task>
+    <task id="LOCAL-00065" summary="feat: add public key on user creation">
+      <option name="closed" value="true" />
+      <created>1706546548227</created>
+      <option name="number" value="00065" />
+      <option name="presentableId" value="LOCAL-00065" />
+      <option name="project" value="LOCAL" />
+      <updated>1706546548227</updated>
+    </task>
+    <task id="LOCAL-00066" summary="feat: SecretKey generation">
+      <option name="closed" value="true" />
+      <created>1710930540605</created>
+      <option name="number" value="00066" />
+      <option name="presentableId" value="LOCAL-00066" />
+      <option name="project" value="LOCAL" />
+      <updated>1710930540605</updated>
+    </task>
+    <task id="LOCAL-00067" summary="feat: signing">
+      <option name="closed" value="true" />
+      <created>1713953916608</created>
+      <option name="number" value="00067" />
+      <option name="presentableId" value="LOCAL-00067" />
+      <option name="project" value="LOCAL" />
+      <updated>1713953916608</updated>
+    </task>
+    <task id="LOCAL-00068" summary="feat: Secret key asymmetric encryption">
+      <option name="closed" value="true" />
+      <created>1714561829220</created>
+      <option name="number" value="00068" />
+      <option name="presentableId" value="LOCAL-00068" />
+      <option name="project" value="LOCAL" />
+      <updated>1714561829220</updated>
+    </task>
+    <task id="LOCAL-00069" summary="feat: digital signature with variable public keys">
+      <option name="closed" value="true" />
+      <created>1714571906056</created>
+      <option name="number" value="00069" />
+      <option name="presentableId" value="LOCAL-00069" />
+      <option name="project" value="LOCAL" />
+      <updated>1714571906056</updated>
+    </task>
+    <task id="LOCAL-00070" summary="fix: public key not found">
+      <option name="closed" value="true" />
+      <created>1714573110779</created>
+      <option name="number" value="00070" />
+      <option name="presentableId" value="LOCAL-00070" />
+      <option name="project" value="LOCAL" />
+      <updated>1714573110779</updated>
+    </task>
+    <task id="LOCAL-00071" summary="refactor: re-added catch statement">
+      <option name="closed" value="true" />
+      <created>1714573249456</created>
+      <option name="number" value="00071" />
+      <option name="presentableId" value="LOCAL-00071" />
+      <option name="project" value="LOCAL" />
+      <updated>1714573249456</updated>
+    </task>
+    <task id="LOCAL-00072" summary="refactor: access public key HashMap from anywhere">
+      <option name="closed" value="true" />
+      <created>1714580991567</created>
+      <option name="number" value="00072" />
+      <option name="presentableId" value="LOCAL-00072" />
+      <option name="project" value="LOCAL" />
+      <updated>1714580991569</updated>
+    </task>
+    <task id="LOCAL-00073" summary="fix: phantom files in vault">
+      <option name="closed" value="true" />
+      <created>1714581010201</created>
+      <option name="number" value="00073" />
+      <option name="presentableId" value="LOCAL-00073" />
+      <option name="project" value="LOCAL" />
+      <updated>1714581010201</updated>
+    </task>
+    <task id="LOCAL-00074" summary="chore: code cleanup">
+      <option name="closed" value="true" />
+      <created>1714581466558</created>
+      <option name="number" value="00074" />
+      <option name="presentableId" value="LOCAL-00074" />
+      <option name="project" value="LOCAL" />
+      <updated>1714581466558</updated>
+    </task>
+    <task id="LOCAL-00075" summary="feat: GUI login, en+decryption, audit logging">
+      <option name="closed" value="true" />
+      <created>1715097749261</created>
+      <option name="number" value="00075" />
+      <option name="presentableId" value="LOCAL-00075" />
+      <option name="project" value="LOCAL" />
+      <updated>1715097749262</updated>
+    </task>
+    <task id="LOCAL-00076" summary="chore: removed TO-DO">
+      <option name="closed" value="true" />
+      <created>1715176434633</created>
+      <option name="number" value="00076" />
+      <option name="presentableId" value="LOCAL-00076" />
+      <option name="project" value="LOCAL" />
+      <updated>1715176434633</updated>
+    </task>
+    <task id="LOCAL-00077" summary="fix: backspace problem, large log file problem, 16-byte string decryption error">
+      <option name="closed" value="true" />
+      <created>1715334569670</created>
+      <option name="number" value="00077" />
+      <option name="presentableId" value="LOCAL-00077" />
+      <option name="project" value="LOCAL" />
+      <updated>1715334569670</updated>
+    </task>
+    <task id="LOCAL-00078" summary="feat: asymmetric secret key with GUI">
+      <option name="closed" value="true" />
+      <created>1715346534480</created>
+      <option name="number" value="00078" />
+      <option name="presentableId" value="LOCAL-00078" />
+      <option name="project" value="LOCAL" />
+      <updated>1715346534480</updated>
+    </task>
+    <task id="LOCAL-00079" summary="feat: digital signatures with GUI">
+      <option name="closed" value="true" />
+      <created>1715348103548</created>
+      <option name="number" value="00079" />
+      <option name="presentableId" value="LOCAL-00079" />
+      <option name="project" value="LOCAL" />
+      <updated>1715348103548</updated>
+    </task>
+    <option name="localTasksCounter" value="80" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/../../../.." />
+    </ignored-roots>
+    <MESSAGE value="perf: authentication multi-threading" />
+    <MESSAGE value="test: persistent test" />
+    <MESSAGE value="refactor: AccessHandler logging" />
+    <MESSAGE value="feat: convert manifest from txt to json file" />
+    <MESSAGE value="fix: file object class" />
+    <MESSAGE value="feat: hide file names" />
+    <MESSAGE value="fix: file content turned into manifest" />
+    <MESSAGE value="feat: en/decryption multithreading" />
+    <MESSAGE value="refactor: authentication overhaul" />
+    <MESSAGE value="refactor: code cleanup" />
+    <MESSAGE value="feat: add public key on user creation" />
+    <MESSAGE value="feat: SecretKey generation" />
+    <MESSAGE value="feat: signing" />
+    <MESSAGE value="feat: Secret key asymmetric encryption" />
+    <MESSAGE value="feat: digital signature with variable public keys" />
+    <MESSAGE value="fix: public key not found" />
+    <MESSAGE value="refactor: re-added catch statement" />
+    <MESSAGE value="refactor: access public key HashMap from anywhere" />
+    <MESSAGE value="fix: phantom files in vault" />
+    <MESSAGE value="chore: code cleanup" />
+    <MESSAGE value="feat: GUI login, en+decryption, audit logging" />
+    <MESSAGE value="chore: removed TO-DO" />
+    <MESSAGE value="fix: backspace problem, large log file problem, 16-byte string decryption error" />
+    <MESSAGE value="feat: asymmetric secret key with GUI" />
+    <MESSAGE value="feat: digital signatures with GUI" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: digital signatures with GUI" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>
