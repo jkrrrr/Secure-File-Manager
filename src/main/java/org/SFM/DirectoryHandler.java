@@ -108,7 +108,6 @@ public class DirectoryHandler {
 
             // Separate content into directories and files
             for (FileObject child : this.currentDir){
-                this.logger_DirectoryHandler.debug("   Sorting object " + child.getName().getBaseName());
                 if (child.getType() == FileType.FOLDER){
                     this.numOfDirs++;
                     dirs.add(child);
@@ -149,7 +148,6 @@ public class DirectoryHandler {
 
         // Count number of files and directories
         for (FileObject child : this.currentDir){
-            this.logger_DirectoryHandler.debug("   Current object: " + child.getName().getBaseName());
             if (child.getType() == FileType.FILE){
                 this.numOfFiles++;
             } else if (child.getType() == FileType.FOLDER){

@@ -192,7 +192,14 @@ public abstract class CryptoHandler {
      * @param ivString 16-byte initialization vector
      */
     public static void processDirectory(Mode mode, String vaultDir, String ivString) throws Exception {
-        Path vaultDirPath = Paths.get(vaultDir);
+        logger_CryptoHandler.debug("In processDirectory");
+        Path vaultDirPath;
+        if (vaultDir.contains("file:///")){
+            vaultDirPath = Paths.get(vaultDir.split("file:///")[1]);
+        } else{
+            vaultDirPath = Paths.get(vaultDir);
+        }
+
         String dir = vaultDirPath.getParent().toString();
         DirectoryHandler dh = new DirectoryHandler(dir);
         ExecutorService executorService;
@@ -271,7 +278,7 @@ public abstract class CryptoHandler {
                 executorService.submit(() -> {
                     try {
                         logger_CryptoHandler.debug("Encrypting " + file);
-//                        processFile(Mode.ENCRYPT, file.toString(), secretKey, ivString);
+                        processFile(Mode.ENCRYPT, file.toString(), secretKey, ivString);
                         logger_CryptoHandler.debug(Thread.currentThread().getName() + ": Encrypted " + file);
                     } catch (Exception e) {
                         logger_CryptoHandler.error(e.getMessage());
