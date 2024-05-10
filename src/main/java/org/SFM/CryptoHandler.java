@@ -117,12 +117,17 @@ public abstract class CryptoHandler {
 
     public static void decryptSecretKey(String keyPath, PrivateKey privateKey){
         try{
+            logger_CryptoHandler.debug("DECRYPTING SECRET KEY AT PATH " + keyPath);
+            Path keyPathFinal;
+            if (keyPath.contains("file:///")){
+                keyPathFinal = Paths.get(keyPath.split("file:///")[1]);
+            } else{
+                keyPathFinal = Paths.get(keyPath);
+            }
             asymmetricCipher.init(Cipher.DECRYPT_MODE, privateKey);
-            Path path = Paths.get(keyPath);
-            byte[] decryptedFileBytes = asymmetricCipher.doFinal(Files.readAllBytes(path));
-            Files.write(path, decryptedFileBytes);
+            byte[] decryptedFileBytes = asymmetricCipher.doFinal(Files.readAllBytes(keyPathFinal));
+            Files.write(keyPathFinal, decryptedFileBytes);
         } catch (Exception e){
-            System.out.println(e.getMessage());
             logger_CryptoHandler.error(e.getMessage());
         }
     }

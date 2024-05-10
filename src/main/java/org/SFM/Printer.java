@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class Printer {
@@ -135,7 +137,6 @@ public class Printer {
                         break;
                     // Enter directory
                     case 'a':
-                        // TO-DO Do something
                         this.terminal.clearScreen();
                         if (this.currentHighlight == 0){
                             this.screen_authentication();
@@ -150,7 +151,6 @@ public class Printer {
                         break;
                 }
 
-                this.logger_Printer.debug("Current highlight: " + this.currentHighlight);
                 if (this.currentHighlight == 0){
                     textGraphics.putString(5, 2, this.pointer + " Log in");
                     textGraphics.putString(5, 3, "  Create user");
@@ -180,18 +180,12 @@ public class Printer {
             this.terminal.flush();
 
             KeyStroke keyStroke = this.terminal.readInput();
-            this.logger_Printer.info("Entering user creation username loop");
-            while (keyStroke.getKeyType() != KeyType.Enter) {
+            while (keyStroke.getKeyType() != KeyType.Enter){
                 this.terminal.flush();
-                if (keyStroke.getCharacter() == '\b') {
+                if (keyStroke.getKeyType() == KeyType.Backspace){
                     currentlyTypedUsername.setLength(Math.max(currentlyTypedUsername.length() - 1, 0));
                 } else {
-                    this.terminal.flush();
-                    if (keyStroke.getKeyType() == KeyType.Backspace && !currentlyTypedUsername.isEmpty()) {
-                        currentlyTypedUsername.deleteCharAt(currentlyTypedUsername.length() - 1);
-                    } else {
-                        currentlyTypedUsername.append(keyStroke.getCharacter());
-                    }
+                    currentlyTypedUsername.append(keyStroke.getCharacter());
                 }
 
                 this.terminal.clearScreen();
@@ -205,21 +199,24 @@ public class Printer {
             // Password
             StringBuilder currentlyTypedPassword = new StringBuilder();
             keyStroke = this.terminal.readInput();
-            this.logger_Printer.info("Entering authentication password loop");
             while (keyStroke.getKeyType() != KeyType.Enter) {
                 this.terminal.flush();
-                if (keyStroke.getKeyType() == KeyType.Backspace && !currentlyTypedPassword.isEmpty()) {
-                    currentlyTypedPassword.deleteCharAt(currentlyTypedPassword.length() - 1);
+                if (keyStroke.getKeyType() == KeyType.Backspace){
+                    currentlyTypedPassword.setLength(Math.max(currentlyTypedPassword.length() - 1, 0));
                 } else {
                     currentlyTypedPassword.append(keyStroke.getCharacter());
                 }
-                textGraphics.putString(5, 3, "Password: " + (currentlyTypedPassword));
+
+                this.terminal.clearScreen();
+                textGraphics.putString(5, 2, "Username: " + currentlyTypedUsername);
+                textGraphics.putString(5, 3, "Password: " + currentlyTypedPassword);
                 this.terminal.flush();
 
                 keyStroke = this.terminal.readInput();
             }
 
             ah.createUser(currentlyTypedUsername.toString(), currentlyTypedPassword.toString());
+            this.logger_Printer.debug("Created user");
             this.terminal.clearScreen();
         } catch (Exception e){
             this.logger_Printer.error(e.getMessage());
@@ -240,15 +237,10 @@ public class Printer {
                 this.logger_Printer.info("Entering authentication username loop");
                 while (keyStroke.getKeyType() != KeyType.Enter){
                     this.terminal.flush();
-                    if (keyStroke.getCharacter() == '\b'){
+                    if (keyStroke.getKeyType() == KeyType.Backspace){
                         currentlyTypedUsername.setLength(Math.max(currentlyTypedUsername.length() - 1, 0));
                     } else {
-                        this.terminal.flush();
-                        if (keyStroke.getKeyType() == KeyType.Backspace && !currentlyTypedUsername.isEmpty()){
-                            currentlyTypedUsername.deleteCharAt(currentlyTypedUsername.length() - 1);
-                        } else {
-                            currentlyTypedUsername.append(keyStroke.getCharacter());
-                        }
+                        currentlyTypedUsername.append(keyStroke.getCharacter());
                     }
 
                     this.terminal.clearScreen();
@@ -265,12 +257,15 @@ public class Printer {
                 this.logger_Printer.info("Entering authentication password loop");
                 while (keyStroke.getKeyType() != KeyType.Enter){
                     this.terminal.flush();
-                    if (keyStroke.getKeyType() == KeyType.Backspace && !currentlyTypedPassword.isEmpty()){
-                        currentlyTypedPassword.deleteCharAt(currentlyTypedPassword.length() - 1);
+                    if (keyStroke.getKeyType() == KeyType.Backspace){
+                        currentlyTypedPassword.setLength(Math.max(currentlyTypedPassword.length() - 1, 0));
                     } else {
                         currentlyTypedPassword.append(keyStroke.getCharacter());
                     }
-                    textGraphics.putString(5, 3, "Password: " + (currentlyTypedPassword));
+
+                    this.terminal.clearScreen();
+                    textGraphics.putString(5, 2, "Username: " + currentlyTypedUsername);
+                    textGraphics.putString(5, 3, "Password: " + currentlyTypedPassword);
                     this.terminal.flush();
 
                     keyStroke = this.terminal.readInput();
@@ -299,7 +294,6 @@ public class Printer {
             KeyStroke keyStroke = this.terminal.readInput();
 
             while (keyStroke.getKeyType() != KeyType.Escape) {
-                this.logger_Printer.debug("Inside directory browser loop");
 
                 // Print current directory
                 this.dirToPrint = new ArrayList<>(this.getDirContent());
@@ -332,11 +326,22 @@ public class Printer {
                         break;
                     case 'w':
                         CryptoHandler.processDirectory(Mode.ENCRYPT, dh.currentDirPath, "aaaaaaaaaaaaaaaa");
+                        ah.sign(Paths.get(Paths.get(dh.currentDirPath).getParent() + "/vault/manifest.json"), Paths.get(dh.currentDirPath).getParent() + "/signature.txt");
+                        CryptoHandler.encryptSecretKey(Paths.get(dh.currentDirPath).getParent() + "/SecretKey", ah.publicKeys.get(ah.username));
+
                         this.dirToPrint = new ArrayList<>(this.getDirContent());
                         this.terminal.clearScreen();
                         break;
                     case 'e':
+                        Path secretKeyPath;
+                        if (dh.currentDirPath.contains("file:///")){
+                            secretKeyPath = Paths.get(dh.currentDirPath.split("file:///")[1]).getParent();
+                        } else{
+                            secretKeyPath = Paths.get(dh.currentDirPath).getParent();
+                        }
+                        CryptoHandler.decryptSecretKey(secretKeyPath + "/SecretKey", ah.getPrivateKey());
                         CryptoHandler.processDirectory(Mode.DECRYPT, dh.currentDirPath, "aaaaaaaaaaaaaaaa");
+//                        ah.verify(Paths.get(Paths.get(dh.currentDirPath).getParent() + "/vault/manifest.json"), Paths.get(dh.currentDirPath).getParent() + "/signature.txt", "user1");
                         this.terminal.clearScreen();
                         break;
                     default:
@@ -371,7 +376,6 @@ public class Printer {
     public ArrayList<String> getDirContent(){
         ArrayList<String> toReturn = new ArrayList<>();
         try {
-            this.logger_Printer.info("Printing dir content");
             for (FileObject child : this.dh.getDirContent()){
                 // Can cause log files to be very large
 //                this.logger_Printer.debug("   Printing " + child.getName().getBaseName());
@@ -391,7 +395,6 @@ public class Printer {
      */
     private void display_directory(){
         try {
-            this.logger_Printer.debug("Retrieving content"); // Get directory content to display
             this.dirToPrint = new ArrayList<>(this.getDirContent());
 
             // Display directory content
@@ -413,7 +416,6 @@ public class Printer {
      */
     private void display_controls(){
         try{
-            this.logger_Printer.debug("Printing controls");
             textGraphics.putString(1, this.rows - 2, "j - up, k - down, a - enter dir, s - exit dir, w - encrypt dir, e - decrypt dir");
             this.terminal.flush();
         } catch (Exception e){

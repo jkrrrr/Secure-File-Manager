@@ -10,6 +10,7 @@ import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -17,6 +18,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Objects;
 
 
 public class AccessHandler {
@@ -31,6 +33,7 @@ public class AccessHandler {
     private String path;
     private final HashMap<String, String> recordMap;
     public final HashMap<String, PublicKey> publicKeys;
+    public String username;
 
     /**
      * Responsible for authenticating user and creating new accounts
@@ -223,6 +226,7 @@ public class AccessHandler {
 
                     // Create KeyPair
                     this.keyPair = new KeyPair(publicKey, privateKeyNew);
+                    this.username = username;
 
                     this.logger_AccessHandler.info("Password assigned");
                     break;
@@ -344,10 +348,10 @@ public class AccessHandler {
      * @param filePath path of file to sign
      * @param sigPath signature output path
      */
-    public void sign(String filePath, String sigPath){
+    public void sign(Path filePath, String sigPath){
         try {
             // Read filePath file
-            byte[] toSign = Files.readAllBytes(Paths.get(filePath));
+            byte[] toSign = Files.readAllBytes(filePath);
 
             // Generate signature
             this.sig.initSign(this.keyPair.getPrivate());
@@ -355,12 +359,12 @@ public class AccessHandler {
             byte[] sigFinal = this.sig.sign();
 
             // Prepare signature file
-            FileOutputStream fileOutputStream = new FileOutputStream(sigPath);
+            FileOutputStream fileOutputStream = new FileOutputStream(Objects.requireNonNullElse(sigPath, "signature.txt"));
             fileOutputStream.write(sigFinal);
             fileOutputStream.close();
             this.logger_AccessHandler.info("Created signature");
         } catch (Exception e){
-            logger_AccessHandler.error(e.getLocalizedMessage());
+            logger_AccessHandler.error(e.getMessage());
         }
     }
     
@@ -371,10 +375,10 @@ public class AccessHandler {
      * @param user username of the sender
      * @return true if the signature is verified, false otherwise
      */
-    public boolean verify(String filePath, String sigPath, String user){
+    public boolean verify(Path filePath, String sigPath, String user){
         try {
             byte[] sig = Files.readAllBytes(Paths.get(sigPath));
-            byte[] data = Files.readAllBytes(Paths.get(filePath));
+            byte[] data = Files.readAllBytes(filePath);
 
             this.sig.initVerify(this.publicKeys.get(user));
             this.sig.update(data);
