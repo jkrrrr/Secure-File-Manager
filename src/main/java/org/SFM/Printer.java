@@ -16,7 +16,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.KeyFactory;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class Printer {
     private static Printer instance = null;
@@ -333,15 +335,17 @@ public class Printer {
                         this.terminal.clearScreen();
                         break;
                     case 'e':
-                        Path secretKeyPath;
+                        Path upperPath;
                         if (dh.currentDirPath.contains("file:///")){
-                            secretKeyPath = Paths.get(dh.currentDirPath.split("file:///")[1]).getParent();
+                            upperPath = Paths.get(dh.currentDirPath.split("file:///")[1]).getParent();
                         } else{
-                            secretKeyPath = Paths.get(dh.currentDirPath).getParent();
+                            upperPath = Paths.get(dh.currentDirPath).getParent();
                         }
-                        CryptoHandler.decryptSecretKey(secretKeyPath + "/SecretKey", ah.getPrivateKey());
+
+                        this.screen_verify(upperPath);
+
+                        CryptoHandler.decryptSecretKey(upperPath + "/SecretKey", ah.getPrivateKey());
                         CryptoHandler.processDirectory(Mode.DECRYPT, dh.currentDirPath, "aaaaaaaaaaaaaaaa");
-//                        ah.verify(Paths.get(Paths.get(dh.currentDirPath).getParent() + "/vault/manifest.json"), Paths.get(dh.currentDirPath).getParent() + "/signature.txt", "user1");
                         this.terminal.clearScreen();
                         break;
                     default:
@@ -358,6 +362,49 @@ public class Printer {
         } catch (Exception e) {
             this.logger_Printer.error(e.getMessage());
         }
+
+    }
+
+    private boolean screen_verify(Path upperPath){
+        try{
+            this.terminal.clearScreen();
+
+            textGraphics.putString(5, 2, "Input sender username: ");
+            this.terminal.flush();
+
+            StringBuilder currentlyTypedUsername = new StringBuilder();
+            KeyStroke keyStroke = this.terminal.readInput();
+            while (keyStroke.getKeyType() != KeyType.Enter){
+                this.terminal.flush();
+                if (keyStroke.getKeyType() == KeyType.Backspace){
+                    currentlyTypedUsername.setLength(Math.max(currentlyTypedUsername.length() - 1, 0));
+                } else {
+                    currentlyTypedUsername.append(keyStroke.getCharacter());
+                }
+
+                this.terminal.clearScreen();
+                textGraphics.putString(5, 2, "Input sender username: " + currentlyTypedUsername);
+                this.terminal.flush();
+
+                keyStroke = this.terminal.readInput();
+            }
+
+            if (ah.verify(Paths.get(upperPath + "/vault/manifest.json"), upperPath + "/signature.txt", currentlyTypedUsername.toString())){
+                textGraphics.putString(5, 3, "Signature verified");
+            } else {
+                textGraphics.putString(5, 3, "Signature not verified");
+            }
+            this.terminal.flush();
+
+            TimeUnit.SECONDS.sleep(3);
+
+            this.terminal.clearScreen();
+            return true;
+        } catch (Exception e){
+            this.logger_Printer.error(e.getMessage());
+        }
+
+        return false;
 
     }
 
